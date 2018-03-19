@@ -25,11 +25,20 @@ envar = fn (name) ->
   end
 end
 
+to_scheme = fn(scheme) ->
+  case scheme do
+    nil -> nil
+    s -> case String.upcase(s) do
+           "HTTPS" -> :https
+           "HTTP" -> :http
+         end
+  end
+end
+
 config :logger, :console, metadata: [:request_id]
 
-config :view_stat,
-  http_basic_auth: [
-    username: envar.("HTTP_AUTH_USER"),
-    password: envar.("HTTP_AUTH_PASS"),
-    realm: "Chroxy"
-  ]
+config :chroxy, Chroxy.Endpoint,
+  scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,
+  port: envar.("CHROXY_ENDPOINT_PORT") || 1330
+
+
