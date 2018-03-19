@@ -2,7 +2,7 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-envar = fn (name) ->
+envar = fn name ->
   #
   # https://github.com/ueberauth/ueberauth_google/issues/40
   #
@@ -19,19 +19,22 @@ envar = fn (name) ->
   # since the configuration is not to be compiled into anything else, it is safe to invoke
   # `System.get_env/1` right away to get the desired value.
   #
-  case List.keyfind(Application.loaded_applications, :distillery, 0) do
+  case List.keyfind(Application.loaded_applications(), :distillery, 0) do
     nil -> System.get_env(name)
     _ -> "${#{name}}"
   end
 end
 
-to_scheme = fn(scheme) ->
+to_scheme = fn scheme ->
   case scheme do
-    nil -> nil
-    s -> case String.upcase(s) do
-           "HTTPS" -> :https
-           "HTTP" -> :http
-         end
+    nil ->
+      nil
+
+    s ->
+      case String.upcase(s) do
+        "HTTPS" -> :https
+        "HTTP" -> :http
+      end
   end
 end
 
@@ -40,5 +43,3 @@ config :logger, :console, metadata: [:request_id]
 config :chroxy, Chroxy.Endpoint,
   scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,
   port: envar.("CHROXY_ENDPOINT_PORT") || 1330
-
-

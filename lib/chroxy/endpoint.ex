@@ -7,9 +7,8 @@ defmodule Chroxy.Endpoint do
   plug(:dispatch)
 
   get "/api/v1/connection" do
-    # spawn proxy, link to chrome
-    # return websocket path routing via proxy
-    send_resp(conn, 200, "not_implemented")
+    endpoint = Chroxy.new()
+    send_resp(conn, 200, endpoint)
   end
 
   match _ do

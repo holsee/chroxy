@@ -10,8 +10,11 @@ defmodule Chroxy.Application do
     endpoint_opts = Application.get_env(:chroxy, Chroxy.Endpoint)
     endpoint_port = endpoint_opts[:port]
     endpoint_scheme = endpoint_opts[:scheme]
-    endpoint_spec = {Plug.Adapters.Cowboy2,
-      scheme: endpoint_scheme, plug: Chroxy.Endpoint, options: [port: endpoint_port]}
+
+    endpoint_spec =
+      {Plug.Adapters.Cowboy2,
+       scheme: endpoint_scheme, plug: Chroxy.Endpoint, options: [port: endpoint_port]}
+
     children = [
       endpoint_spec
     ]
