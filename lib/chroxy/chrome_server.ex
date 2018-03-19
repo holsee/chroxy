@@ -23,14 +23,18 @@ defmodule Chroxy.ChromeServer do
   ##
   # GenServer callbacks
 
-  def init(args)  do
+  def init(args) do
     opts = Keyword.merge(default_opts(), args)
-    send self(), :launch
-    {:ok, %{options: opts}}
+    send(self(), :launch)
+    {:ok, %{websocket: nil, options: opts}}
   end
 
-  def handle_call(:endpoint, _from, state = %{options: options}) do
-    {:reply, "ws://127.0.0.1:#{options[:chrome_port]}", state}
+  def handle_call(:endpoint, _from, state = %{websocket: nil}) do
+    {:reply, :not_ready, state}
+  end
+
+  def handle_call(:endpoint, _from, state = %{websocket: websocket}) when websocket != nil do
+    {:reply, websocket, state}
   end
 
   def handle_info(:launch, state = %{options: opts}) do
@@ -40,21 +44,42 @@ defmodule Chroxy.ChromeServer do
       --user-data-dir=/tmp
     )
     chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
-    command = [chrome_path, opts[:chrome_flags], value_flags]
-              |> List.flatten
-              |> Enum.join(" ")
+
+    command =
+      [chrome_path, opts[:chrome_flags], value_flags]
+      |> List.flatten()
+      |> Enum.join(" ")
+
     {:ok, pid, os_pid} = Exexec.run_link(command, exec_options())
     state = Map.merge(%{command: command, pid: pid, os_pid: os_pid}, state)
     {:noreply, state}
   end
 
-  def handle_info({:stdout, pid, data}, state) do
-    Logger.info("[#{pid}] #{inspect data}")
+  @log_head_size 19 * 8
+
+  def handle_info({:stdout, pid, <<_::size(@log_head_size), ":WARNING:", msg::binary>>}, state) do
+    Logger.warn("[#{pid}] #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:", msg::binary>>}, state) do
+    Logger.error("[#{pid}] #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  def handle_info({:stdout, pid, <<"\r\nDevTools listening on ", rest::binary>> = msg}, state) do
+    Logger.info("[#{pid}] #{inspect(msg)}")
+    websocket = String.trim_trailing(rest, "\r\n")
+    {:noreply, %{state | websocket: websocket}}
+  end
+
+  def handle_info({:stdout, pid, msg}, state) do
+    Logger.info("[#{pid}] #{inspect(msg)}")
     {:noreply, state}
   end
 
   def handle_info({:stderr, pid, data}, state) do
-    Logger.error("[#{pid}] #{inspect data}")
+    Logger.error("[#{pid}] #{inspect(data)}")
     {:noreply, state}
   end
 
@@ -86,13 +111,12 @@ defmodule Chroxy.ChromeServer do
   end
 
   defp chrome_path do
-    case :os.type do
+    case :os.type() do
       {:unix, :darwin} ->
         "/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
+
       {:unix, _} ->
         "/usr/bin/google-chrome"
     end
   end
-
 end
-

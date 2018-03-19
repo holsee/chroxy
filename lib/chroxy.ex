@@ -1,9 +1,17 @@
 defmodule Chroxy do
-  @doc """
-  Initialise proxy to instance of Chrome
-  """
-  def new do
-    {:ok, pid} = Chroxy.ChromeServer.start_link([])
-    Chroxy.ChromeServer.endpoint(pid)
+  def launch(args) do
+    {:ok, pid} = Chroxy.ChromeServer.start_link(args)
+    endpoint(pid)
+  end
+
+  defp endpoint(pid) do
+    case Chroxy.ChromeServer.endpoint(pid) do
+      :not_ready ->
+        Process.sleep(1000)
+        endpoint(pid)
+
+      endpoint ->
+        endpoint
+    end
   end
 end
