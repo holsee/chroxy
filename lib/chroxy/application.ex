@@ -7,16 +7,9 @@ defmodule Chroxy.Application do
   require Logger
 
   def start(_type, _args) do
-    endpoint_opts = Application.get_env(:chroxy, Chroxy.Endpoint)
-    endpoint_port = endpoint_opts[:port]
-    endpoint_scheme = endpoint_opts[:scheme]
-
-    endpoint_spec =
-      {Plug.Adapters.Cowboy2,
-       scheme: endpoint_scheme, plug: Chroxy.Endpoint, options: [port: endpoint_port]}
-
     children = [
-      endpoint_spec
+      Chroxy.Endpoint.child_spec(),
+      Chroxy.ChromeServer.sup_spec()
     ]
 
     Logger.info("Started application")

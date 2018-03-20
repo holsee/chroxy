@@ -2,11 +2,15 @@ defmodule Chroxy.ChromeServer do
   use GenServer
   require Logger
 
+  def sup_spec() do
+    {DynamicSupervisor, name: Chroxy.ChromeSupervisor, strategy: :one_for_one}
+  end
+
   def child_spec(opts) do
     %{
       id: __MODULE__,
       start: {__MODULE__, :start_link, [opts]},
-      restart: :permanent,
+      restart: :transient,
       shutdown: 5000,
       type: :worker
     }
@@ -14,6 +18,18 @@ defmodule Chroxy.ChromeServer do
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
+  end
+
+  def start_supervised!(args) do
+    DynamicSupervisor.start_child(Chroxy.ChromeSupervisor, Chroxy.ChromeServer.child_spec(args))
+  end
+
+  def stop(server) do
+    send(server, :stop)
+  end
+
+  def ready(server) do
+    GenServer.call(server, :ready)
   end
 
   def endpoint(server) do
@@ -29,12 +45,20 @@ defmodule Chroxy.ChromeServer do
     {:ok, %{websocket: nil, options: opts}}
   end
 
+  def handle_call(:endpoint, _from, state = %{websocket: {:error, reason}}) do
+    {:reply, reason, state}
+  end
+
   def handle_call(:endpoint, _from, state = %{websocket: nil}) do
     {:reply, :not_ready, state}
   end
 
   def handle_call(:endpoint, _from, state = %{websocket: websocket}) when websocket != nil do
     {:reply, websocket, state}
+  end
+
+  def handle_info(:stop, state) do
+    {:stop, :normal, state}
   end
 
   def handle_info(:launch, state = %{options: opts}) do
@@ -59,6 +83,13 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":WARNING:", msg::binary>>}, state) do
     Logger.warn("[#{pid}] #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ", msg::binary>>}, state) do
+    Logger.error("[#{pid}] Address already in use, terminating")
+    # signal self termination as in bad state due to port conflict
+    stop(self())
     {:noreply, state}
   end
 

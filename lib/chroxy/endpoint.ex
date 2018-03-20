@@ -6,8 +6,18 @@ defmodule Chroxy.Endpoint do
   plug(:match)
   plug(:dispatch)
 
+  def child_spec() do
+    endpoint_opts = Application.get_env(:chroxy, Chroxy.Endpoint)
+    endpoint_port = endpoint_opts[:port]
+    endpoint_scheme = endpoint_opts[:scheme]
+
+    {Plug.Adapters.Cowboy2,
+     scheme: endpoint_scheme, plug: Chroxy.Endpoint, options: [port: endpoint_port]}
+  end
+
   get "/api/v1/connection" do
-    endpoint = Chroxy.new()
+    launch_opts = []
+    endpoint = Chroxy.launch(launch_opts)
     send_resp(conn, 200, endpoint)
   end
 
