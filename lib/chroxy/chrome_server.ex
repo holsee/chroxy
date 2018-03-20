@@ -20,7 +20,7 @@ defmodule Chroxy.ChromeServer do
     GenServer.start_link(__MODULE__, args)
   end
 
-  def start_supervised!(args) do
+  def start_supervised(args) do
     DynamicSupervisor.start_child(Chroxy.ChromeSupervisor, Chroxy.ChromeServer.child_spec(args))
   end
 

@@ -1,6 +1,6 @@
 defmodule Chroxy do
   def launch(args) do
-    {:ok, pid} = Chroxy.ChromeServer.start_link(args)
+    {:ok, pid} = Chroxy.ChromeServer.start_supervised(args)
     endpoint(pid)
   end
 
