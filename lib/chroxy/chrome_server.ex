@@ -1,10 +1,24 @@
+defmodule Chroxy.ChromeServer.Supervisor do
+  @sup __MODULE__
+  @worker Chroxy.ChromeServer
+
+
+  def child_spec() do
+    {DynamicSupervisor, name: @sup, strategy: :one_for_one}
+  end
+
+  def start_child(args) do
+    DynamicSupervisor.start_child(@sup, @worker.child_spec(args))
+  end
+
+  def which_children() do
+    DynamicSupervisor.which_children(@sup)
+  end
+end
+
 defmodule Chroxy.ChromeServer do
   use GenServer
   require Logger
-
-  def sup_spec() do
-    {DynamicSupervisor, name: Chroxy.ChromeSupervisor, strategy: :one_for_one}
-  end
 
   def child_spec(opts) do
     %{
@@ -18,10 +32,6 @@ defmodule Chroxy.ChromeServer do
 
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
-  end
-
-  def start_supervised(args) do
-    DynamicSupervisor.start_child(Chroxy.ChromeSupervisor, Chroxy.ChromeServer.child_spec(args))
   end
 
   def stop(server) do
@@ -82,29 +92,35 @@ defmodule Chroxy.ChromeServer do
   @log_head_size 19 * 8
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":WARNING:", msg::binary>>}, state) do
+    msg = String.replace(msg, "\r\n", "")
     Logger.warn("[#{pid}] #{inspect(msg)}")
     {:noreply, state}
   end
 
-  def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ", msg::binary>>}, state) do
-    Logger.error("[#{pid}] Address already in use, terminating")
+  def handle_info({:stdout, pid, <<_::size(@log_head_size),
+                                   ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ",
+                                   _msg::binary>>}, state) do
+    Logger.error("[#{pid}] Address / Port already in use. terminating")
     # signal self termination as in bad state due to port conflict
     stop(self())
     {:noreply, state}
   end
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:", msg::binary>>}, state) do
+    msg = String.replace(msg, "\r\n", "")
     Logger.error("[#{pid}] #{inspect(msg)}")
     {:noreply, state}
   end
 
   def handle_info({:stdout, pid, <<"\r\nDevTools listening on ", rest::binary>> = msg}, state) do
+    msg = String.replace(msg, "\r\n", "")
     Logger.info("[#{pid}] #{inspect(msg)}")
     websocket = String.trim_trailing(rest, "\r\n")
     {:noreply, %{state | websocket: websocket}}
   end
 
   def handle_info({:stdout, pid, msg}, state) do
+    msg = String.replace(msg, "\r\n", "")
     Logger.info("[#{pid}] #{inspect(msg)}")
     {:noreply, state}
   end

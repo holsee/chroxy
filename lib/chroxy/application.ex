@@ -9,7 +9,7 @@ defmodule Chroxy.Application do
   def start(_type, _args) do
     children = [
       Chroxy.Endpoint.child_spec(),
-      Chroxy.ChromeServer.sup_spec()
+      Chroxy.ChromeServer.Supervisor.child_spec()
     ]
 
     Logger.info("Started application")
