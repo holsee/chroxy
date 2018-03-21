@@ -2,7 +2,6 @@ defmodule Chroxy.ChromeServer.Supervisor do
   @sup __MODULE__
   @worker Chroxy.ChromeServer
 
-
   def child_spec() do
     {DynamicSupervisor, name: @sup, strategy: :one_for_one}
   end
@@ -97,9 +96,12 @@ defmodule Chroxy.ChromeServer do
     {:noreply, state}
   end
 
-  def handle_info({:stdout, pid, <<_::size(@log_head_size),
-                                   ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ",
-                                   _msg::binary>>}, state) do
+  def handle_info(
+        {:stdout, pid,
+         <<_::size(@log_head_size),
+           ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ", _msg::binary>>},
+        state
+      ) do
     Logger.error("[#{pid}] Address / Port already in use. terminating")
     # signal self termination as in bad state due to port conflict
     stop(self())

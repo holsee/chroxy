@@ -23,6 +23,7 @@ defmodule Chroxy.MixProject do
   defp deps do
     [
       {:plug, "~> 1.5"},
+      {:ranch, "~> 1.4"},
       {:cowboy, "~> 2.2"},
       {:jason, "~> 1.0"},
       {:erlexec, "~> 1.7"},
