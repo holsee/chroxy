@@ -11,8 +11,7 @@ defmodule Chroxy.ChromeProxy do
   @doc """
   Initialise proxy server to route requests back for routing
   """
-  def init() do
-    proxy_port = 1337
+  def init(proxy_port \\ 1337) do
     acceptor_pool = 100
     proxy_delegate = {__MODULE__, :proxy}
 
@@ -34,14 +33,8 @@ defmodule Chroxy.ChromeProxy do
   def proxy(data) do
     Logger.info("proxy delagate called with #{inspect(data)}")
 
-    # ---------------------
-    # TODO The following is the next focus, dynamic / remote spawning of chrome
-    # servers which will be linked to incoming socket connections.
-    # ---------------------
     host = {127, 0, 0, 1}
     port = 9223
-    # _chrome_ws_endpoint = launch_chrome(chrome_port: port)
-    # ---------------------
 
     Logger.info("Establishing proxy connection to: #{inspect(host)}:#{port}")
     [remote: {host, port}, data: data, reply: ""]

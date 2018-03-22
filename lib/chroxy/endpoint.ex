@@ -16,8 +16,7 @@ defmodule Chroxy.Endpoint do
   end
 
   get "/api/v1/connection" do
-    launch_opts = []
-    endpoint = Chroxy.launch(launch_opts)
+    endpoint = Chroxy.endpoint()
     send_resp(conn, 200, endpoint)
   end
 

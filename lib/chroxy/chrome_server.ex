@@ -19,6 +19,8 @@ defmodule Chroxy.ChromeServer do
   use GenServer
   require Logger
 
+  alias ChromeRemoteInterface.Session
+
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -37,12 +39,34 @@ defmodule Chroxy.ChromeServer do
     send(server, :stop)
   end
 
-  def ready(server) do
-    GenServer.call(server, :ready)
+  def ready(server, opts \\ []) do
+    retries = Keyword.get(opts, :retries, 5)
+    wait_ms = Keyword.get(opts, :wait_ms, 1000)
+
+    case GenServer.call(server, :ready) do
+      :not_ready ->
+        if retries > 0 do
+          Process.sleep(wait_ms)
+          ready(server, retries: retries - 1, wait_ms: wait_ms)
+        else
+          :timeout
+        end
+
+      res ->
+        res
+    end
   end
 
-  def endpoint(server) do
-    GenServer.call(server, :endpoint)
+  def list_pages(server) do
+    GenServer.call(server, :list_pages)
+  end
+
+  def new_page(server) do
+    GenServer.call(server, :new_page)
+  end
+
+  def close_page(server, page) do
+    GenServer.call(server, {:close_page, page})
   end
 
   ##
@@ -51,19 +75,30 @@ defmodule Chroxy.ChromeServer do
   def init(args) do
     opts = Keyword.merge(default_opts(), args)
     send(self(), :launch)
-    {:ok, %{websocket: nil, options: opts}}
+    {:ok, %{options: opts, session: nil}}
   end
 
-  def handle_call(:endpoint, _from, state = %{websocket: {:error, reason}}) do
-    {:reply, reason, state}
-  end
-
-  def handle_call(:endpoint, _from, state = %{websocket: nil}) do
+  def handle_call(_, _from, state = %{session: nil}) do
     {:reply, :not_ready, state}
   end
 
-  def handle_call(:endpoint, _from, state = %{websocket: websocket}) when websocket != nil do
-    {:reply, websocket, state}
+  def handle_call(:ready, _from, state = %{session: _session}) do
+    {:reply, :ready, state}
+  end
+
+  def handle_call(:list_pages, _from, state = %{session: session}) do
+    {:ok, pages} = Session.list_pages(session)
+    {:reply, pages, state}
+  end
+
+  def handle_call(:new_page, _from, state = %{session: session}) do
+    {:ok, page} = Session.new_page(session)
+    {:reply, page, state}
+  end
+
+  def handle_call({:close_page, page}, _from, state = %{session: session}) do
+    {:ok, _res} = Session.close_page(session, page["id"])
+    {:reply, :ok, state}
   end
 
   def handle_info(:stop, state) do
@@ -114,11 +149,15 @@ defmodule Chroxy.ChromeServer do
     {:noreply, state}
   end
 
-  def handle_info({:stdout, pid, <<"\r\nDevTools listening on ", rest::binary>> = msg}, state) do
+  def handle_info(
+        {:stdout, pid, <<"\r\nDevTools listening on ", rest::binary>> = msg},
+        state = %{options: opts}
+      ) do
     msg = String.replace(msg, "\r\n", "")
     Logger.info("[#{pid}] #{inspect(msg)}")
-    websocket = String.trim_trailing(rest, "\r\n")
-    {:noreply, %{state | websocket: websocket}}
+    chrome_port = Keyword.get(opts, :chrome_port)
+    session = Session.new(port: chrome_port)
+    {:noreply, %{state | session: session}}
   end
 
   def handle_info({:stdout, pid, msg}, state) do
