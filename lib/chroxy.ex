@@ -79,8 +79,8 @@ defmodule Chroxy do
     :ready = Chroxy.ChromeServer.ready(chrome)
     page = Chroxy.ChromeServer.new_page(chrome)
     websocket = page["webSocketDebuggerUrl"]
-    # TODO Perform proxy initialisation here.
-    {:reply, websocket, state}
+    proxy_socket = initialise_proxy(websocket)
+    {:reply, proxy_socket, state}
   end
 
   def handle_cast({:start_chrome, port}, state) do
@@ -107,6 +107,29 @@ defmodule Chroxy do
     random_server = chrome_procs |> Enum.take_random(1) |> List.first
     Logger.info("Selected chrome server: #{inspect random_server}")
     elem(random_server, 1)
+  end
+
+  def initialise_proxy(websocket) do
+    websocket_uri = URI.parse(websocket)
+    proxy_port = 1331
+    {:ok, proxy_server} =
+      Chroxy.ProxyServer.serve(
+        1,
+        :ranch_tcp,
+        [port: proxy_port],
+        proxy: fn(data) ->
+          host = websocket_uri.host |> String.to_charlist
+          port = websocket_uri.port
+          [remote: {host, port}, data: data, reply: ""]
+        end
+      )
+    # Garbage websocket uri conversion to proxy
+    websocket_port_s = websocket_uri.port |> Integer.to_string
+    proxy_port_s = proxy_port |> Integer.to_string
+    proxy_socket = String.replace(websocket, websocket_port_s, proxy_port_s)
+
+    Logger.info("Proxy websocket: #{proxy_socket}")
+    proxy_socket
   end
 
 end

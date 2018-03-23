@@ -49,7 +49,7 @@ defmodule Chroxy.ProxyServer do
             socket: :inet.socket(),
             socket_opts: [:gen_tcp.option()],
             transport: module(),
-            proxy: {module(), function()},
+            proxy: {module(), atom()} | fun(),
             buffer: binary(),
             remote_endpoint: any(),
             remote_socket: :inet.socket(),
@@ -199,6 +199,9 @@ defmodule Chroxy.ProxyServer do
 
   defp run_proxy({mod, fun}, data) do
     apply(mod, fun, [data])
+  end
+  defp run_proxy(fun, data) when is_function(fun) do
+    fun.(data)
   end
 
   defp terminate(%State{socket: socket, transport: transport}) do
