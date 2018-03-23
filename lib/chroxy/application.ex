@@ -7,9 +7,10 @@ defmodule Chroxy.Application do
   require Logger
 
   def start(_type, _args) do
+    chroxy_opts = Application.get_all_env(:chroxy)
     children = [
       Chroxy.ChromeServer.Supervisor.child_spec(),
-      Chroxy.child_spec(nil),
+      Chroxy.child_spec(chroxy_opts),
       Chroxy.Endpoint.child_spec()
     ]
 

@@ -6,26 +6,32 @@ defmodule Chroxy do
 
   # PLAN
   # ====
-  #
+
+  # [DONE]
+
   # on init, take arguments that will create a pool of Chrome Process
   # -- don't hold the state here for the Chrome processes
   # -- make it do this is the ChromeServer application, and more chrome
+
+  # [TODO]
+
   # instances means more deployments of this server, these could be load
   # balanced.
   # -- the only API Call needed is in fact the one we have to ask for the ws://
   # endpoint, for which we return the proxied version with the page websocket as
   # the downstread connection arguments trapped as a closure :D.
+
   # ---> Ultimately we will need to look at Chroxy.ChromeProxy definition, it
   # may need moved here.  Also we may want to have another hook on termination,
   # not just on establishing the connection.
-  #
+
   # From this pool of processes, select one and create a page from it
   # -- balancing the connections / pages between the processes in the pool
-  #
+
   # Next work on the proxy to automatically close the pages when the client
   # disconnections or goes idles. The ChromeProxy / ProxyServer should have
   # a new interface to allow for dynamic configuration of the callbacks.
-  #
+
   # SHIP IT!
 
   def child_spec(opts) do
@@ -45,37 +51,62 @@ defmodule Chroxy do
   ##
   # API
 
+  @doc """
+  Starts a chrome browser process
+  """
   def start_chrome(port) do
-    # TODO This is likely to become a Start Chromes, and delagate all state to the
-    # Chrome Supervisor.  This process is not to be stateful it if can be
-    # helped!
-    GenServer.call(__MODULE__, {:start_chrome, port})
+    GenServer.cast(__MODULE__, {:start_chrome, port})
   end
 
-  def connection(chrome) when is_pid(chrome) do
-    GenServer.call(__MODULE__, {:connection, chrome})
+  @doc """
+  Request new page websocket url
+  """
+  def connection() do
+    GenServer.call(__MODULE__, :connection)
   end
 
   ##
   # Callbacks
 
-  def init(_args) do
+  def init(args) do
+    chrome_ports = Keyword.get(args, :chrome_remote_debug_ports, 9222..9227)
+    init_chrome_procs(chrome_ports)
     {:ok, %{}}
   end
 
-  def handle_call({:connection, chrome}, _from, state) do
+  def handle_call(:connection, _from, state) do
+    chrome = get_chrome_server()
     :ready = Chroxy.ChromeServer.ready(chrome)
     page = Chroxy.ChromeServer.new_page(chrome)
     websocket = page["webSocketDebuggerUrl"]
-    # TODO We have all the info here needed to populate the initialisation
-    # closure for the proxy connection
+    # TODO Perform proxy initialisation here.
     {:reply, websocket, state}
   end
 
-  def handle_call({:start_chrome, port}, _from, state) do
-    {:ok, pid} = Chroxy.ChromeServer.Supervisor.start_child(chrome_port: port)
-    # TODO Monitor Chrome process
-    {:reply, pid, Map.put(state, :chrome, pid)}
+  def handle_cast({:start_chrome, port}, state) do
+    {:ok, _} = Chroxy.ChromeServer.Supervisor.start_child(chrome_port: port)
+    {:noreply, state}
+  end
+
+  ##
+  # Chrome Pool
+
+  @doc """
+  For each port in the port provided, spawn a chrome browser process.
+  """
+  def init_chrome_procs(ports) do
+    ports
+    |> Enum.map(&(start_chrome(&1)))
+  end
+
+  @doc """
+  Select random chrome server from which to spawn a new page.
+  """
+  def get_chrome_server() do
+    chrome_procs = Chroxy.ChromeServer.Supervisor.which_children()
+    random_server = chrome_procs |> Enum.take_random(1) |> List.first
+    Logger.info("Selected chrome server: #{inspect random_server}")
+    elem(random_server, 1)
   end
 
 end

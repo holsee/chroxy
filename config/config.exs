@@ -40,6 +40,9 @@ end
 
 config :logger, :console, metadata: [:request_id]
 
+config :chroxy,
+  chrome_remote_debug_ports: 9222..9227
+
 config :chroxy, Chroxy.Endpoint,
   scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,
   port: envar.("CHROXY_ENDPOINT_PORT") || 1330

@@ -1,6 +1,5 @@
 %{
   "certifi": {:hex, :certifi, "2.0.0", "a0c0e475107135f76b8c1d5bc7efb33cd3815cb3cf3dea7aefdd174dabead064", [:rebar3], [], "hexpm"},
-  "chrome_launcher": {:hex, :chrome_launcher, "0.0.4", "961186b9e861e6e9a78f6c5322cfa877fe16a212a4b088588a19498da429e5a4", [:mix], [{:erlexec, "~> 1.7", [hex: :erlexec, repo: "hexpm", optional: false]}], "hexpm"},
   "chrome_remote_interface": {:hex, :chrome_remote_interface, "0.1.0", "adbde0db2ddff17f1620d3e53e14b28c04e3bea3e4f4cff75a8eb8f45a62144a", [:mix], [{:hackney, "~> 1.8 or ~> 1.7 or ~> 1.6", [hex: :hackney, repo: "hexpm", optional: false]}, {:poison, "~> 3.1", [hex: :poison, repo: "hexpm", optional: false]}, {:websockex, "~> 0.4.0", [hex: :websockex, repo: "hexpm", optional: false]}], "hexpm"},
   "cowboy": {:hex, :cowboy, "2.2.2", "6cde634da1da8b1d17dd2b20f5f6f91ab8ac7fa1b5106d13dad63c905ab76004", [:rebar3], [{:cowlib, "~> 2.1.0", [hex: :cowlib, repo: "hexpm", optional: false]}, {:ranch, "~> 1.4.0", [hex: :ranch, repo: "hexpm", optional: false]}], "hexpm"},
   "cowlib": {:hex, :cowlib, "2.1.0", "f73658b93dd043af40400c3e4fd997068ebd0c617f8c8f4cd003a1a78ebf94f5", [:rebar3], [], "hexpm"},

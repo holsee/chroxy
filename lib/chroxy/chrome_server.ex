@@ -43,7 +43,7 @@ defmodule Chroxy.ChromeServer do
     retries = Keyword.get(opts, :retries, 5)
     wait_ms = Keyword.get(opts, :wait_ms, 1000)
 
-    case GenServer.call(server, :ready) do
+    case GenServer.call(server, :ready, 30_000) do
       :not_ready ->
         if retries > 0 do
           Process.sleep(wait_ms)
