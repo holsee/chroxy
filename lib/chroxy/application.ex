@@ -13,7 +13,7 @@ defmodule Chroxy.Application do
     children = [
       Chroxy.ProxyListener.child_spec(proxy_opts),
       Chroxy.ChromeServer.Supervisor.child_spec(),
-      Chroxy.child_spec(chroxy_opts),
+      Chroxy.ChromeManager.child_spec(chroxy_opts),
       Chroxy.Endpoint.child_spec()
     ]
 

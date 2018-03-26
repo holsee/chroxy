@@ -107,9 +107,11 @@ defmodule Chroxy.ChromeServer do
 
   def handle_cast(:close_all_pages, state = %{session: session}) do
     {:ok, pages} = Session.list_pages(session)
-    Enum.each(pages, fn(page) ->
+
+    Enum.each(pages, fn page ->
       Session.close_page(session, page["id"])
     end)
+
     {:noreply, state}
   end
 

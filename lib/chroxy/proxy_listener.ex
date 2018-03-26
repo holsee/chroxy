@@ -11,6 +11,8 @@ defmodule Chroxy.ProxyListener do
     reuseaddr: true
   ]
 
+  @default_port 1331
+
   def child_spec(opts) do
     %{
       id: __MODULE__,
@@ -47,6 +49,7 @@ defmodule Chroxy.ProxyListener do
       {:ok, socket} ->
         Logger.debug("Listening on port: #{port}")
         {:noreply, %{listen_socket: socket}}
+
       {:error, reason} ->
         Logger.error("TCP Listen failed due to: #{inspect(reason)}")
         {:stop, :normal, state}
@@ -62,22 +65,31 @@ defmodule Chroxy.ProxyListener do
     case :gen_tcp.accept(socket) do
       {:ok, upstream_socket} ->
         Logger.info("Connection accepted, spawning proxy server to manage connection")
-        {:ok, proxy} = Chroxy.ProxyServer.start_link(upstream_socket: upstream_socket,
-                                                     proxy_opts: proxy_opts)
+
+        {:ok, proxy} =
+          Chroxy.ProxyServer.start_link(
+            upstream_socket: upstream_socket,
+            proxy_opts: proxy_opts
+          )
+
         # set the spawned proxy as the controlling process for the socket
         :gen_tcp.controlling_process(upstream_socket, proxy)
         {:noreply, state}
+
       {:error, :closed} ->
         Logger.warn("Upstream listener socket closed")
         {:stop, :normal, state}
+
       {:error, :timeout} ->
         Logger.error("Upstream listener timed out waiting to accept")
         {:stop, :normal, state}
+
       {:error, :system_limit} ->
-        Logger.error("Upstream listen hit system limit all available ports in the Erlang emulator are in use")
+        Logger.error(
+          "Upstream listen hit system limit all available ports in the Erlang emulator are in use"
+        )
+
         {:stop, :normal, state}
     end
   end
-
 end
-
