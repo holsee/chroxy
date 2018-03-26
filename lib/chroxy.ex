@@ -3,7 +3,6 @@ defmodule Chroxy do
 
   require Logger
 
-
   # PLAN
   # ====
 
@@ -96,7 +95,7 @@ defmodule Chroxy do
   """
   def init_chrome_procs(ports) do
     ports
-    |> Enum.map(&(start_chrome(&1)))
+    |> Enum.map(&start_chrome(&1))
   end
 
   @doc """
@@ -104,33 +103,33 @@ defmodule Chroxy do
   """
   def get_chrome_server() do
     chrome_procs = Chroxy.ChromeServer.Supervisor.which_children()
-    random_server = chrome_procs |> Enum.take_random(1) |> List.first
-    Logger.info("Selected chrome server: #{inspect random_server}")
+    random_server = chrome_procs |> Enum.take_random(1) |> List.first()
+    Logger.info("Selected chrome server: #{inspect(random_server)}")
     elem(random_server, 1)
   end
 
   def initialise_proxy(websocket) do
     websocket_uri = URI.parse(websocket)
     proxy_port = 1331
+
     {:ok, proxy_server} =
       Chroxy.ProxyServer.serve(
         1,
         :ranch_tcp,
         [port: proxy_port],
-        proxy: fn(data) ->
-          host = websocket_uri.host |> String.to_charlist
+        proxy: fn data ->
+          host = websocket_uri.host |> String.to_charlist()
           port = websocket_uri.port
           [remote: {host, port}, data: data, reply: ""]
         end
       )
+
     # Garbage websocket uri conversion to proxy
-    websocket_port_s = websocket_uri.port |> Integer.to_string
-    proxy_port_s = proxy_port |> Integer.to_string
+    websocket_port_s = websocket_uri.port |> Integer.to_string()
+    proxy_port_s = proxy_port |> Integer.to_string()
     proxy_socket = String.replace(websocket, websocket_port_s, proxy_port_s)
 
     Logger.info("Proxy websocket: #{proxy_socket}")
     proxy_socket
   end
-
 end
-
