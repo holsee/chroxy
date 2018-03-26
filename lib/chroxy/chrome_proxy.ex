@@ -7,7 +7,7 @@ defmodule Chroxy.ChromeProxy do
   @doc """
   Called when Proxy is initialising.
   """
-  def up(args) do
+  def up(_args) do
     Logger.info("UP CALLED")
     []
   end
@@ -15,7 +15,7 @@ defmodule Chroxy.ChromeProxy do
   @doc """
   Called when upstream or downstream connections are closed
   """
-  def down(state) do
+  def down(_state) do
     Logger.info("DOWN CALLED")
     :ok
   end

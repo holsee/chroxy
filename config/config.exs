@@ -38,9 +38,13 @@ to_scheme = fn scheme ->
   end
 end
 
-config :logger, :console, metadata: [:request_id]
+config :logger, :console, metadata: [:request_id, :pid, :module]
 
 config :chroxy, chrome_remote_debug_ports: 9222..9223
+
+config :chroxy, Chroxy.ProxyListener,
+  host: "127.0.0.1",
+  port: 1431
 
 config :chroxy, Chroxy.Endpoint,
   scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,

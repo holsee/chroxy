@@ -69,6 +69,10 @@ defmodule Chroxy.ChromeServer do
     GenServer.call(server, {:close_page, page})
   end
 
+  def close_all_pages(server) do
+    GenServer.cast(server, :close_all_pages)
+  end
+
   ##
   # GenServer callbacks
 
@@ -99,6 +103,14 @@ defmodule Chroxy.ChromeServer do
   def handle_call({:close_page, page}, _from, state = %{session: session}) do
     {:ok, _res} = Session.close_page(session, page["id"])
     {:reply, :ok, state}
+  end
+
+  def handle_cast(:close_all_pages, state = %{session: session}) do
+    {:ok, pages} = Session.list_pages(session)
+    Enum.each(pages, fn(page) ->
+      Session.close_page(session, page["id"])
+    end)
+    {:noreply, state}
   end
 
   def handle_info(:stop, state) do
@@ -150,7 +162,7 @@ defmodule Chroxy.ChromeServer do
   end
 
   def handle_info(
-        {:stdout, pid, <<"\r\nDevTools listening on ", rest::binary>> = msg},
+        {:stdout, pid, <<"\r\nDevTools listening on ", _rest::binary>> = msg},
         state = %{options: opts}
       ) do
     msg = String.replace(msg, "\r\n", "")

@@ -37,13 +37,12 @@ defmodule Chroxy.ProxyServer do
     proxy_opts = Keyword.get(args, :proxy_opts)
     hook = Keyword.get(proxy_opts, :hook)
     hook_opts =
-      if hook and function_exported?(hook, :up, 1) do
+      if hook && function_exported?(hook, :up, 1) do
         hook.up(args)
       else
         []
       end
     opts = Keyword.merge(proxy_opts, hook_opts)
-    Logger.warn("[DEBUG] Proxy Opts? #{inspect(opts)}")
     downstream_host = Keyword.get(opts, :downstream_host)
     downstream_port = Keyword.get(opts, :downstream_port)
     send(self(), :init_downstream)
@@ -95,7 +94,7 @@ defmodule Chroxy.ProxyServer do
     Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Upstream socket closed, terminating proxy")
 
     hook = Map.get(state, :hook)
-    if hook and Module.defines?(hook, {:down, 1}) do
+    if hook && function_exported?(hook, :down, 1) do
       hook.down(state)
     end
 
@@ -109,7 +108,7 @@ defmodule Chroxy.ProxyServer do
     Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Downstream socket closed, terminating proxy")
 
     hook = Map.get(state, :hook)
-    if hook and function_exported?(hook, :down, 1) do
+    if hook && function_exported?(hook, :down, 1) do
       hook.down(state)
     end
 

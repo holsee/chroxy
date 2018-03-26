@@ -8,9 +8,10 @@ defmodule Chroxy.Application do
 
   def start(_type, _args) do
     chroxy_opts = Application.get_all_env(:chroxy)
+    proxy_opts = Application.get_env(:chroxy, Chroxy.ProxyListener)
 
     children = [
-      Chroxy.ProxyListener.child_spec([]),
+      Chroxy.ProxyListener.child_spec(proxy_opts),
       Chroxy.ChromeServer.Supervisor.child_spec(),
       Chroxy.child_spec(chroxy_opts),
       Chroxy.Endpoint.child_spec()

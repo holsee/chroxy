@@ -7,7 +7,6 @@ defmodule Chroxy.ProxyListener do
     :binary,
     packet: 0,
     active: true,
-    port: 1331,
     backlog: 10_000,
     reuseaddr: true
   ]
@@ -38,14 +37,16 @@ defmodule Chroxy.ProxyListener do
   # Callbacks
 
   def init(args) do
-    send(self(), :listen)
+    port = Keyword.get(args, :port, @default_port)
+    send(self(), {:listen, port})
     {:ok, %{listen_socket: nil}}
   end
 
-  def handle_info(:listen, state = %{listen_socket: nil}) do
-    case :gen_tcp.listen(0, @upstream_tcp_opts) do
+  def handle_info({:listen, port}, state = %{listen_socket: nil}) do
+    case :gen_tcp.listen(port, @upstream_tcp_opts) do
       {:ok, socket} ->
-        {:noreply, state = %{listen_socket: socket}}
+        Logger.debug("Listening on port: #{port}")
+        {:noreply, %{listen_socket: socket}}
       {:error, reason} ->
         Logger.error("TCP Listen failed due to: #{inspect(reason)}")
         {:stop, :normal, state}
@@ -53,17 +54,14 @@ defmodule Chroxy.ProxyListener do
   end
 
   def handle_info(msg, state) do
-    Logger.warn("[#{inspect(__MODULE__)}:#{inspect(self())}] Received message: #{inspect(msg)}}")
+    Logger.warn("Unexpected message: #{inspect(msg)}}")
     {:noreply, state}
   end
 
   def handle_cast({:accept, proxy_opts}, state = %{listen_socket: socket}) do
     case :gen_tcp.accept(socket) do
       {:ok, upstream_socket} ->
-        Logger.info("connection accepted, spawning proxy server to manage connection")
-        # TODO we want a supervisor for the ProxyServers not a direct link to
-        # listener
-        Logger.info("[DEBUG] Proxy Opts: #{inspect proxy_opts}")
+        Logger.info("Connection accepted, spawning proxy server to manage connection")
         {:ok, proxy} = Chroxy.ProxyServer.start_link(upstream_socket: upstream_socket,
                                                      proxy_opts: proxy_opts)
         # set the spawned proxy as the controlling process for the socket
