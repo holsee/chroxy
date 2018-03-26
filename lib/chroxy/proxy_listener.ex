@@ -60,9 +60,10 @@ defmodule Chroxy.ProxyListener do
   def handle_cast({:accept, proxy_opts}, state = %{listen_socket: socket}) do
     case :gen_tcp.accept(socket) do
       {:ok, upstream_socket} ->
-        Logger.info("connection established, spawning proxy server for connection")
+        Logger.info("connection accepted, spawning proxy server to manage connection")
         # TODO we want a supervisor for the ProxyServers not a direct link to
         # listener
+        Logger.info("[DEBUG] Proxy Opts: #{inspect proxy_opts}")
         {:ok, proxy} = Chroxy.ProxyServer.start_link(upstream_socket: upstream_socket,
                                                      proxy_opts: proxy_opts)
         # set the spawned proxy as the controlling process for the socket

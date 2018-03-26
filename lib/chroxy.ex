@@ -12,20 +12,16 @@ defmodule Chroxy do
   # -- don't hold the state here for the Chrome processes
   # -- make it do this is the ChromeServer application, and more chrome
 
-  # [TODO]
-
   # instances means more deployments of this server, these could be load
   # balanced.
   # -- the only API Call needed is in fact the one we have to ask for the ws://
   # endpoint, for which we return the proxied version with the page websocket as
   # the downstread connection arguments trapped as a closure :D.
 
-  # ---> Ultimately we will need to look at Chroxy.ChromeProxy definition, it
-  # may need moved here.  Also we may want to have another hook on termination,
-  # not just on establishing the connection.
-
   # From this pool of processes, select one and create a page from it
   # -- balancing the connections / pages between the processes in the pool
+
+  # [TODO]
 
   # Next work on the proxy to automatically close the pages when the client
   # disconnections or goes idles. The ChromeProxy / ProxyServer should have
@@ -78,8 +74,8 @@ defmodule Chroxy do
     :ready = Chroxy.ChromeServer.ready(chrome)
     page = Chroxy.ChromeServer.new_page(chrome)
     websocket = page["webSocketDebuggerUrl"]
-    proxy_socket = initialise_proxy(websocket)
-    {:reply, proxy_socket, state}
+    proxy_websocket = initialise_proxy(websocket)
+    {:reply, proxy_websocket, state}
   end
 
   def handle_cast({:start_chrome, port}, state) do
@@ -118,7 +114,8 @@ defmodule Chroxy do
     # once connection from client is established to the chrome host:port,
     # data from client will be forwarded and received by the chrome websocket,
     # and data returned will be forwarded back to the client (transparently).
-    Chroxy.ProxyListener.accept(downstream_host: browser_host,
+    Chroxy.ProxyListener.accept(hook: Chroxy.ChromeProxy,
+                                downstream_host: browser_host,
                                 downstream_port: browser_port)
 
     proxy_websocket_addr = route_ws_via_proxy(websocket, @proxy_port)
