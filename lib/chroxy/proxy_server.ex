@@ -142,6 +142,36 @@ defmodule Chroxy.ProxyServer do
      }}
   end
 
+  def handle_info({:tcp, downstream_socket, data}, state = %{upstream: %{socket: upstream_socket},
+                                                             downstream: %{socket: downstream_socket}}) do
+    Logger.info("Up <- Down: #{inspect(data)}")
+    :gen_tcp.send(upstream_socket, data)
+    {:noreply, state}
+  end
+
+  def handle_info({:tcp, upstream_socket, data}, state = %{upstream: %{socket: upstream_socket},
+                                                           downstream: %{socket: downstream_socket}}) do
+    Logger.info("Up -> Down: #{inspect(data)}")
+    :gen_tcp.send(downstream_socket, data)
+    {:noreply, state}
+  end
+
+  def handle_info({:tcp_closed, upstream_socket}, state = %{upstream: %{socket: upstream_socket},
+                                                            downstream: %{socket: downstream_socket}}) do
+    Logger.info("Upstream socket closed, terminating proxy")
+    :gen_tcp.close(downstream_socket)
+    :gen_tcp.close(upstream_socket)
+    {:stop, :normal, state}
+  end
+
+  def handle_info({:tcp_closed, downstream_socket}, state = %{upstream: %{socket: upstream_socket},
+                                                              downstream: %{socket: downstream_socket}}) do
+    Logger.info("Downstream socket closed, terminating proxy")
+    :gen_tcp.close(downstream_socket)
+    :gen_tcp.close(upstream_socket)
+    {:stop, :normal, state}
+  end
+
   def handle_info(msg, state) do
     Logger.warn("[#{inspect(__MODULE__)}:#{inspect(self())}] Received message: #{inspect(msg)}")
     {:noreply, state}
