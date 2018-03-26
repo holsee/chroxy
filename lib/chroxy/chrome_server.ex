@@ -141,7 +141,7 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":WARNING:", msg::binary>>}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.warn("#{inspect(msg)}")
+    Logger.warn("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -151,7 +151,7 @@ defmodule Chroxy.ChromeServer do
            ":ERROR:socket_posix.cc(143)] bind() returned an error, errno=48: ", _msg::binary>>},
         state
       ) do
-    Logger.error("[#{pid}] Address / Port already in use. terminating")
+    Logger.error("[CHROME: #{inspect(pid)}] Address / Port already in use. terminating")
     # signal self termination as in bad state due to port conflict
     stop(self())
     {:noreply, state}
@@ -159,7 +159,7 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:", msg::binary>>}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.error("#{inspect(msg)}")
+    Logger.error("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -168,7 +168,7 @@ defmodule Chroxy.ChromeServer do
         state = %{options: opts}
       ) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.info("#{inspect(msg)}")
+    Logger.info("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
     chrome_port = Keyword.get(opts, :chrome_port)
     session = Session.new(port: chrome_port)
     {:noreply, %{state | session: session}}
@@ -176,12 +176,12 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, msg}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.info("#{inspect(msg)}")
+    Logger.info("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
     {:noreply, state}
   end
 
   def handle_info({:stderr, pid, data}, state) do
-    Logger.error("#{inspect(data)}")
+    Logger.error("[CHROME: #{inspect(pid)}] #{inspect(data)}")
     {:noreply, state}
   end
 

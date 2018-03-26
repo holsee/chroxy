@@ -87,14 +87,14 @@ defmodule Chroxy.ChromeProxy do
       downstream_port: uri.port
     )
     proxy_websocket = proxy_websocket_addr(page)
-    {:reply, proxy_websocket, state = %{state|page: page}}
+    {:reply, proxy_websocket, %{state|page: page}}
   end
   def handle_call(:chrome_connection, _from, state = %{page: page}) do
     proxy_websocket = proxy_websocket_addr(page)
     {:reply, proxy_websocket, state}
   end
 
-  def handle_cast({:down, proxy_state}, state = %{chrome: chrome, page: page}) do
+  def handle_cast({:down, _proxy_state}, state = %{chrome: chrome, page: page}) do
     Logger.info("Proxy connection down - closing page")
     # Close the page as connect is down
     Chroxy.ChromeServer.close_page(chrome, page)
