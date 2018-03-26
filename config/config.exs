@@ -43,8 +43,8 @@ config :logger, :console, metadata: [:request_id, :pid, :module]
 config :chroxy, chrome_remote_debug_ports: 9222..9223
 
 config :chroxy, Chroxy.ProxyListener,
-  host: "127.0.0.1",
-  port: 1431
+  host: envar.("CHROXY_PROXY_HOST") || "127.0.0.1",
+  port: envar.("CHROXY_PROXY_PORT") || 1331
 
 config :chroxy, Chroxy.Endpoint,
   scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,
