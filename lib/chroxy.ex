@@ -108,28 +108,32 @@ defmodule Chroxy do
     elem(random_server, 1)
   end
 
+  @proxy_port 1331
+
   def initialise_proxy(websocket) do
     websocket_uri = URI.parse(websocket)
-    proxy_port = 1331
+    browser_host = websocket_uri.host |> String.to_charlist
+    browser_port = websocket_uri.port
+    # Signals proxy to accept a single connection,
+    # once connection from client is established to the chrome host:port,
+    # data from client will be forwarded and received by the chrome websocket,
+    # and data returned will be forwarded back to the client (transparently).
+    Chroxy.ProxyListener.accept(downstream_host: browser_host,
+                                downstream_port: browser_port)
 
-    {:ok, proxy_server} =
-      Chroxy.ProxyServer.serve(
-        1,
-        :ranch_tcp,
-        [port: proxy_port],
-        proxy: fn data ->
-          host = websocket_uri.host |> String.to_charlist()
-          port = websocket_uri.port
-          [remote: {host, port}, data: data, reply: ""]
-        end
-      )
+    proxy_websocket_addr = route_ws_via_proxy(websocket, @proxy_port)
+    Logger.info("Proxy websocket: #{proxy_websocket_addr}")
+    proxy_websocket_addr
+  end
 
-    # Garbage websocket uri conversion to proxy
-    websocket_port_s = websocket_uri.port |> Integer.to_string()
-    proxy_port_s = proxy_port |> Integer.to_string()
-    proxy_socket = String.replace(websocket, websocket_port_s, proxy_port_s)
-
-    Logger.info("Proxy websocket: #{proxy_socket}")
-    proxy_socket
+  @doc """
+  Garbage websocket uri conversion to proxy.
+  TODO We need to use real host names / ip addresses.
+  """
+  defp route_ws_via_proxy(websocket, proxy_port) do
+    uri = URI.parse(websocket)
+    String.replace(websocket,
+                   Integer.to_string(uri.port),
+                   Integer.to_string(proxy_port))
   end
 end
