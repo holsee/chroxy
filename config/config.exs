@@ -38,9 +38,22 @@ to_scheme = fn scheme ->
   end
 end
 
+parse_range = fn
+  (nil, nil) -> nil
+  (from, nil) ->
+    [String.to_integer(from)]
+  (nil, to) ->
+    [String.to_integer(to)]
+  (from, to) ->
+    Range.new(String.to_integer(from), String.to_integer(to))
+end
+
 config :logger, :console, metadata: [:request_id, :pid, :module]
 
-config :chroxy, chrome_remote_debug_ports: 9222..9223
+config :chroxy,
+  chrome_remote_debug_ports: parse_range.(
+    envar.("CHROXY_CHROME_PORT_FROM"),
+    envar.("CHROXY_CHROME_PORT_TO")) || 9222..9223
 
 config :chroxy, Chroxy.ProxyListener,
   host: envar.("CHROXY_PROXY_HOST") || "127.0.0.1",
