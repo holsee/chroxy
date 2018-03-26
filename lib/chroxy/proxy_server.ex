@@ -39,18 +39,14 @@ defmodule Chroxy.ProxyServer do
     # which will optionally implement hook functions
     proxy_opts = Keyword.get(args, :proxy_opts)
     hook = Keyword.get(proxy_opts, :hook)
-    Logger.debug("HERE?")
     hook_opts =
       if hook && function_exported?(hook.mod, :up, 2) do
-        Logger.debug("in here?")
         apply(hook.mod, :up, [hook.ref, args])
       end
-    Logger.debug("waddabout here?")
     opts = Keyword.merge(proxy_opts, hook_opts || [])
     downstream_host = Keyword.get(opts, :downstream_host)
     downstream_port = Keyword.get(opts, :downstream_port)
     send(self(), :init_downstream)
-    Logger.debug("and here?")
     {:ok,
      %{
        upstream: %{
@@ -68,7 +64,7 @@ defmodule Chroxy.ProxyServer do
 
   def handle_info(:init_downstream, state = %{downstream: downstream}) do
     {:ok, down_socket} = :gen_tcp.connect(downstream.host, downstream.port, downstream.tcp_opts)
-    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Downstream connection established")
+    Logger.debug("Downstream connection established")
 
     {:noreply,
      %{
@@ -84,7 +80,7 @@ defmodule Chroxy.ProxyServer do
         {:tcp, downstream_socket, data},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Up <- Down: #{inspect(data)}")
+    Logger.debug("Up <- Down: #{inspect(data)}")
     :gen_tcp.send(upstream_socket, data)
     {:noreply, state}
   end
@@ -93,7 +89,7 @@ defmodule Chroxy.ProxyServer do
         {:tcp, upstream_socket, data},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Up -> Down: #{inspect(data)}")
+    Logger.debug("Up -> Down: #{inspect(data)}")
     :gen_tcp.send(downstream_socket, data)
     {:noreply, state}
   end
@@ -102,9 +98,7 @@ defmodule Chroxy.ProxyServer do
         {:tcp_closed, upstream_socket},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.info(
-      "[#{inspect(__MODULE__)}:#{inspect(self())}] Upstream socket closed, terminating proxy"
-    )
+    Logger.debug("Upstream socket closed, terminating proxy")
 
     hook = Map.get(state, :hook)
     if hook && function_exported?(hook.mod, :down, 2) do
@@ -120,9 +114,7 @@ defmodule Chroxy.ProxyServer do
         {:tcp_closed, downstream_socket},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.info(
-      "[#{inspect(__MODULE__)}:#{inspect(self())}] Downstream socket closed, terminating proxy"
-    )
+    Logger.warn("Downstream socket closed, terminating proxy")
 
     hook = Map.get(state, :hook)
     if hook && function_exported?(hook.mod, :down, 2) do
@@ -134,8 +126,4 @@ defmodule Chroxy.ProxyServer do
     {:stop, :normal, state}
   end
 
-  def handle_info(msg, state) do
-    Logger.warn("[#{inspect(__MODULE__)}:#{inspect(self())}] Received message: #{inspect(msg)}")
-    {:noreply, state}
-  end
 end

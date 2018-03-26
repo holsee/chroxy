@@ -141,7 +141,7 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":WARNING:", msg::binary>>}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.warn("[#{pid}] #{inspect(msg)}")
+    Logger.warn("#{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -159,7 +159,7 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:", msg::binary>>}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.error("[#{pid}] #{inspect(msg)}")
+    Logger.error("#{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -168,7 +168,7 @@ defmodule Chroxy.ChromeServer do
         state = %{options: opts}
       ) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.info("[#{pid}] #{inspect(msg)}")
+    Logger.info("#{inspect(msg)}")
     chrome_port = Keyword.get(opts, :chrome_port)
     session = Session.new(port: chrome_port)
     {:noreply, %{state | session: session}}
@@ -176,12 +176,12 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, msg}, state) do
     msg = String.replace(msg, "\r\n", "")
-    Logger.info("[#{pid}] #{inspect(msg)}")
+    Logger.info("#{inspect(msg)}")
     {:noreply, state}
   end
 
   def handle_info({:stderr, pid, data}, state) do
-    Logger.error("[#{pid}] #{inspect(data)}")
+    Logger.error("#{inspect(data)}")
     {:noreply, state}
   end
 
