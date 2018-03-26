@@ -48,7 +48,7 @@ defmodule Chroxy.ProxyServer do
     {:ok, down_socket} = :gen_tcp.connect(downstream.host,
                                           downstream.port,
                                           downstream.tcp_opts)
-    Logger.info("Downstream connection established")
+    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Downstream connection established")
     {:noreply, %{
        state
        | downstream: %{
@@ -60,21 +60,21 @@ defmodule Chroxy.ProxyServer do
 
   def handle_info({:tcp, downstream_socket, data}, state = %{upstream: %{socket: upstream_socket},
                                                              downstream: %{socket: downstream_socket}}) do
-    Logger.info("Up <- Down: #{inspect(data)}")
+    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Up <- Down: #{inspect(data)}")
     :gen_tcp.send(upstream_socket, data)
     {:noreply, state}
   end
 
   def handle_info({:tcp, upstream_socket, data}, state = %{upstream: %{socket: upstream_socket},
                                                            downstream: %{socket: downstream_socket}}) do
-    Logger.info("Up -> Down: #{inspect(data)}")
+    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Up -> Down: #{inspect(data)}")
     :gen_tcp.send(downstream_socket, data)
     {:noreply, state}
   end
 
   def handle_info({:tcp_closed, upstream_socket}, state = %{upstream: %{socket: upstream_socket},
                                                             downstream: %{socket: downstream_socket}}) do
-    Logger.info("Upstream socket closed, terminating proxy")
+    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Upstream socket closed, terminating proxy")
     :gen_tcp.close(downstream_socket)
     :gen_tcp.close(upstream_socket)
     {:stop, :normal, state}
@@ -82,7 +82,7 @@ defmodule Chroxy.ProxyServer do
 
   def handle_info({:tcp_closed, downstream_socket}, state = %{upstream: %{socket: upstream_socket},
                                                               downstream: %{socket: downstream_socket}}) do
-    Logger.info("Downstream socket closed, terminating proxy")
+    Logger.info("[#{inspect(__MODULE__)}:#{inspect(self())}] Downstream socket closed, terminating proxy")
     :gen_tcp.close(downstream_socket)
     :gen_tcp.close(upstream_socket)
     {:stop, :normal, state}
