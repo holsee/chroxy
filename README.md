@@ -73,6 +73,16 @@ the communication and lifetime of the Chrome Browsers and Tabs.
 Returns WebSocket URI `ws://` to a Chrome Browser Page which is routed via the
 Proxy.  The first port of call for external client connecting to the service.
 
+Request:
+```
+$ curl http://localhost:1330/api/v1/connection
+```
+Response:
+```
+ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
+```
+
+
 ### Configuration
 
 Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
@@ -102,15 +112,15 @@ CLIENT: Establishing connections & navigating to page
 https://asciinema.org/a/BmDcMZIYkAhF0CAssvSFeFeTm
 
 ``` elixir
-# Establish 50 connections 
+# Establish 50 connections
 clients = Enum.map(1..50, fn(_) ->
-  ChroxyClient.start_link(%{host: "localhost", port: 1330}) |> elem(1)
+  ChroxyClient.page_session!(%{host: "localhost", port: 1330})
 end)
 ```
 
 ``` elixir
 # Run 50 Asynchronous browser operations
-Task.async_stream(clients, fn(client) -> 
+Task.async_stream(clients, fn(client) ->
   {:ok, _} = ChromeRemoteInterface.RPC.Page.navigate(client, %{url: "http://github.com"})
 end) |> Stream.run
 ```

@@ -97,6 +97,7 @@ defmodule Chroxy.ChromeServer do
 
   def handle_call(:new_page, _from, state = %{session: session}) do
     {:ok, page} = Session.new_page(session)
+    Process.sleep(50)
     {:reply, page, state}
   end
 
