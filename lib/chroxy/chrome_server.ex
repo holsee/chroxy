@@ -77,9 +77,12 @@ defmodule Chroxy.ChromeServer do
   # GenServer callbacks
 
   def init(args) do
+    config = Application.get_env(:chroxy, __MODULE__)
+    page_wait_ms = Keyword.get(config, :page_wait_ms, 50)
+    # TODO we will want to get the chrome browser options from config too
     opts = Keyword.merge(default_opts(), args)
     send(self(), :launch)
-    {:ok, %{options: opts, session: nil}}
+    {:ok, %{options: opts, session: nil, page_wait_ms: page_wait_ms}}
   end
 
   def handle_call(_, _from, state = %{session: nil}) do
@@ -95,9 +98,9 @@ defmodule Chroxy.ChromeServer do
     {:reply, pages, state}
   end
 
-  def handle_call(:new_page, _from, state = %{session: session}) do
+  def handle_call(:new_page, _from, state = %{session: session, page_wait_ms: page_wait_ms}) do
     {:ok, page} = Session.new_page(session)
-    Process.sleep(50)
+    Process.sleep(page_wait_ms)
     {:reply, page, state}
   end
 

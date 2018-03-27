@@ -62,3 +62,6 @@ config :chroxy, Chroxy.ProxyListener,
 config :chroxy, Chroxy.Endpoint,
   scheme: to_scheme.(envar.("CHROXY_ENDPOINT_SCHEME")) || :http,
   port: envar.("CHROXY_ENDPOINT_PORT") || 1330
+
+config :chroxy, Chroxy.ChromeServer,
+  page_wait_ms: envar.("CHROXY_CHROME_SERVER_PAGE_WAIT_MS") || 50

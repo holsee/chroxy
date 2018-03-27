@@ -87,14 +87,15 @@ ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 
 Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
 
-| Variable                  | Default       | Desc.                                                      |
-| :------------------------ | :------------ | :--------------------------------------------------------- |
-| CHROXY_CHROME_PORT_FROM   | 9222          | Starting port in the Chrome Browser port range             |
-| CHROXY_CHROME_PORT_TO     | 9223          | Last port in the Chrome Browser port range                 |
-| CHROXY_PROXY_HOST         | "127.0.0.1"   | Host which is substituted to route connections via proxy   |
-| CHROXY_PROXY_PORT         | 1331          | Port which proxy listener will accept connections on       |
-| CHROXY_ENDPOINT_SCHEME    | :http         | `HTTP` or `HTTPS`                                          |
-| CHROXY_ENDPOINT_PORT      | 1330          | HTTP API will register on this port                        |
+| Variable                          | Default       | Desc.                                                      |
+| :------------------------         | :------------ | :--------------------------------------------------------- |
+| CHROXY_CHROME_PORT_FROM           | 9222          | Starting port in the Chrome Browser port range             |
+| CHROXY_CHROME_PORT_TO             | 9223          | Last port in the Chrome Browser port range                 |
+| CHROXY_PROXY_HOST                 | "127.0.0.1"   | Host which is substituted to route connections via proxy   |
+| CHROXY_PROXY_PORT                 | 1331          | Port which proxy listener will accept connections on       |
+| CHROXY_ENDPOINT_SCHEME            | :http         | `HTTP` or `HTTPS`                                          |
+| CHROXY_ENDPOINT_PORT              | 1330          | HTTP API will register on this port                        |
+| CHROXY_CHROME_SERVER_PAGE_WAIT_MS | 50            | Milliseconds to wait after asking chrome to create a page  |
 
 ### Operation Examples
 
