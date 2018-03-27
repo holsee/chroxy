@@ -111,16 +111,19 @@ CLIENT: Establishing connections & navigating to page
 
 https://asciinema.org/a/BmDcMZIYkAhF0CAssvSFeFeTm
 
+See: Chroxy Client project
+
 ``` elixir
-# Establish 50 connections
-clients = Enum.map(1..50, fn(_) ->
+# Establish 100 connections
+clients = Enum.map(1..100, fn(_) ->
   ChroxyClient.page_session!(%{host: "localhost", port: 1330})
 end)
 ```
 
 ``` elixir
-# Run 50 Asynchronous browser operations
+# Run 100 Asynchronous browser operations
 Task.async_stream(clients, fn(client) ->
-  {:ok, _} = ChromeRemoteInterface.RPC.Page.navigate(client, %{url: "http://github.com"})
-end) |> Stream.run
+  url = "https://feg-cl-devel-01.orcs.io/public/documents/525177e7-e5da-489d-9d8b-e50d6e8a3006"
+  {:ok, _} = ChromeRemoteInterface.RPC.Page.navigate(client, %{url: url})
+end, timeout: :infinity) |> Stream.run
 ```

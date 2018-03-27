@@ -53,7 +53,7 @@ config :logger, :console, metadata: [:request_id, :pid, :module]
 config :chroxy,
   chrome_remote_debug_ports: parse_range.(
     envar.("CHROXY_CHROME_PORT_FROM"),
-    envar.("CHROXY_CHROME_PORT_TO")) || 9222..9223
+    envar.("CHROXY_CHROME_PORT_TO")) || 9222..9227
 
 config :chroxy, Chroxy.ProxyListener,
   host: envar.("CHROXY_PROXY_HOST") || "127.0.0.1",
