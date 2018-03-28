@@ -11,6 +11,8 @@ Scalable Chrome Browser Service.
 
 ### Components
 
+<div style="width: 960px; height: 720px; margin: 10px; position: relative;"><iframe allowfullscreen frameborder="0" style="width:960px; height:720px" src="https://www.lucidchart.com/documents/embeddedchart/1186cc1b-838a-4371-875a-278c1df8a14e" id="Am3oxz9YcxOI"></iframe></div>
+
 #### Proxy
 
 A intermediary TCP proxy is in place to allow for monitoring of the _upstream_
