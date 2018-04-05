@@ -11,7 +11,7 @@ defmodule Chroxy.Endpoint do
     endpoint_port = endpoint_opts[:port]
     endpoint_scheme = endpoint_opts[:scheme]
 
-    {Plug.Adapters.Cowboy2,
+    {Plug.Adapters.Cowboy,
      scheme: endpoint_scheme, plug: Chroxy.Endpoint, options: [port: endpoint_port]}
   end
 
