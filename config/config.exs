@@ -2,6 +2,17 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+try_int = fn
+  (nil) -> nil
+  (i) when is_integer(i) -> i
+  (s) when is_binary(s) ->
+    try do
+      String.to_integer(s)
+    rescue
+      _ -> s
+    end
+end
+
 envar = fn name ->
   #
   # https://github.com/ueberauth/ueberauth_google/issues/40
@@ -19,10 +30,11 @@ envar = fn name ->
   # since the configuration is not to be compiled into anything else, it is safe to invoke
   # `System.get_env/1` right away to get the desired value.
   #
-  case List.keyfind(Application.loaded_applications(), :distillery, 0) do
+  res = case List.keyfind(Application.loaded_applications(), :distillery, 0) do
     nil -> System.get_env(name)
     _ -> "${#{name}}"
   end
+  try_int.(res)
 end
 
 to_scheme = fn scheme ->
@@ -41,12 +53,13 @@ end
 parse_range = fn
   (nil, nil) -> nil
   (from, nil) ->
-    [String.to_integer(from)]
+    [try_int.(from)]
   (nil, to) ->
-    [String.to_integer(to)]
+    [try_int.(to)]
   (from, to) ->
-    Range.new(String.to_integer(from), String.to_integer(to))
+    Range.new(try_int.(from), try_int.(to))
 end
+
 
 config :logger, :console, metadata: [:request_id, :pid, :module]
 
