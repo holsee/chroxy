@@ -1,5 +1,8 @@
 # Chroxy
 
+See branch `cowboy-2.2.x` for cowboy 2 support and integration with apps using
+cowboy 2.
+
 Scalable Chrome Browser Service.
 
 * Provides connections to Chrome Browser Pages* via WebSocket connection.
