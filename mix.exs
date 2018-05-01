@@ -40,7 +40,7 @@ defmodule Chroxy.MixProject do
   defp package() do
     [
       name: "chroxy",
-      files: ["config", "lib", "priv", "mix.exs", "README*", "LICENSE*"],
+      files: ["config", "lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Steven Holdsworth (@holsee)"],
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/holsee/chroxy"}
