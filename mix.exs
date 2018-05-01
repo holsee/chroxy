@@ -4,7 +4,7 @@ defmodule Chroxy.MixProject do
   def project do
     [
       app: :chroxy,
-      version: "0.1.0",
+      version: "0.2.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps()
@@ -14,7 +14,7 @@ defmodule Chroxy.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :cowboy, :plug],
+      extra_applications: [:logger, :erlexec, :exexec],
       mod: {Chroxy.Application, []}
     ]
   end
@@ -23,8 +23,11 @@ defmodule Chroxy.MixProject do
   defp deps do
     [
       {:plug, "~> 1.5"},
-      {:cowboy, "~> 2.2"},
-      {:jason, "~> 1.0"}
+      {:cowboy, "~> 1.1"},
+      {:jason, "~> 1.0"},
+      {:erlexec, "~> 1.1.3"},
+      {:exexec, "~> 0.0.1"},
+      {:chrome_remote_interface, "~> 0.1.0"}
     ]
   end
 end
