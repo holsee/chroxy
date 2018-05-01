@@ -7,7 +7,9 @@ defmodule Chroxy.MixProject do
       version: "0.3.0",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      description: description(),
+      package: package(),
     ]
   end
 
@@ -28,6 +30,20 @@ defmodule Chroxy.MixProject do
       {:erlexec, "~> 1.1.3"},
       {:exexec, "~> 0.0.1"},
       {:chrome_remote_interface, "~> 0.1.0"}
+    ]
+  end
+
+  defp description() do
+    "Chrome Proxy Service enabling scalable remote debug protocol connections to managed Headless Chrome instances."
+  end
+
+  defp package() do
+    [
+      name: "chroxy",
+      files: ["config", "lib", "priv", "mix.exs", "README*", "LICENSE*"],
+      maintainers: ["Steven Holdsworth (@holsee)"],
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/holsee/chroxy"}
     ]
   end
 end
