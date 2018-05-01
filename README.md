@@ -97,6 +97,17 @@ ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 
 ### Configuration
 
+The configuration is designed to be friendly for containerisation as such uses
+environment variables.
+
+If using Chroxy from within another OTP application you may wish to leverage the
+configuration implementation of Chroxy by including the config like so in your
+`config/config.exs` file:
+
+```
+include_config "../deps/chroxy/config/config.exs"
+```
+
 Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
 
 | Variable                          | Default       | Desc.                                                      |
