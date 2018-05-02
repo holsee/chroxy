@@ -1,4 +1,8 @@
 defmodule Chroxy.ChromeServer.Supervisor do
+  @moduledoc """
+  `DynamicSupervisor` for `Chroxy.ChromeServer`
+  """
+
   @sup __MODULE__
   @worker Chroxy.ChromeServer
 
@@ -16,6 +20,17 @@ defmodule Chroxy.ChromeServer.Supervisor do
 end
 
 defmodule Chroxy.ChromeServer do
+  @moduledoc """
+  `GenServer` process which manages a port connection to a Chrome
+  browser OS Process as well as a `ChromeRemoteInterface.Session` to
+  the browser instance providing command and control over the instance.
+
+  The `stdout` and `stderr` messages from the os process are captured
+  and are used to determine state transitions, namely when the browser
+  is ready to start accepting connections, and when the browser enters
+  a critical error state and must be terminated.
+  """
+
   use GenServer
   require Logger
 
@@ -33,15 +48,23 @@ defmodule Chroxy.ChromeServer do
     }
   end
 
+  @doc """
+  Spanws a `Chroxy.ChromeServer` process which in turn starts an underlying
+  chrome browser os process, which is managed by a shared lifetime allowing
+  for managing Chrome Browser within an OTP Supervision model.
+  """
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
 
-  def terminate(reason, state) do
-    Logger.warn("ChromeServer terminating - #{inspect(state)} - reason: #{reason}")
-    :ok
-  end
+  @doc """
+  Blocks and performs a poll of the underlying `Chroxy.ChromeServer` to determine when
+  the chrome browser instance is ready for interaction.
 
+  Keyword `opts`:
+  * `:retries` - number to times to poll for _ready_ state.
+  * `:wait_ms` - how long to _sleep_ between polling calls.
+  """
   def ready(server, opts \\ []) do
     retries = Keyword.get(opts, :retries, 5)
     wait_ms = Keyword.get(opts, :wait_ms, 1000)
@@ -66,18 +89,30 @@ defmodule Chroxy.ChromeServer do
     end
   end
 
+  @doc """
+  Lists page sessions currently open to the chrome instance.
+  """
   def list_pages(server) do
     GenServer.call(server, :list_pages)
   end
 
+  @doc """
+  Creates a new chrome page (tab) within the chrome instance.
+  """
   def new_page(server) do
     GenServer.call(server, :new_page)
   end
 
+  @doc """
+  Closes the page in the chrome instance.
+  """
   def close_page(server, page) do
     GenServer.cast(server, {:close_page, page})
   end
 
+  @doc """
+  Closes all open pages in the chrome instance.
+  """
   def close_all_pages(server) do
     GenServer.cast(server, :close_all_pages)
   end
@@ -85,6 +120,13 @@ defmodule Chroxy.ChromeServer do
   ##
   # GenServer callbacks
 
+  @doc false
+  def terminate(reason, state) do
+    Logger.warn("ChromeServer terminating - #{inspect(state)} - reason: #{reason}")
+    :ok
+  end
+
+  @doc false
   def init(args) do
     config = Application.get_env(:chroxy, __MODULE__)
     page_wait_ms = Keyword.get(config, :page_wait_ms) |> String.to_integer()
@@ -95,6 +137,7 @@ defmodule Chroxy.ChromeServer do
     {:ok, %{options: opts, session: nil, page_wait_ms: page_wait_ms}}
   end
 
+  @doc false
   def handle_call(_, _from, state = %{session: nil}) do
     {:reply, :not_ready, state}
   end
@@ -114,6 +157,7 @@ defmodule Chroxy.ChromeServer do
     {:reply, page, state}
   end
 
+  @doc false
   def handle_cast({:close_page, page}, state = %{session: session}) do
     Session.close_page(session, page["id"])
     {:noreply, state}
@@ -129,6 +173,7 @@ defmodule Chroxy.ChromeServer do
     {:noreply, state}
   end
 
+  @doc false
   def handle_info(:launch, state = %{options: opts}) do
     # Check tmp dir is writable, otherwise stop
     case System.tmp_dir() do
