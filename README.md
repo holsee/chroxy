@@ -50,7 +50,7 @@ $ mix do deps.get, compile
 
 _Run the Chroxy Server:_
 ```
-$ mix run
+$ mix run --no-halt
 ```
 
 _Run with an attached session:_
