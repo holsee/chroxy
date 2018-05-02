@@ -68,6 +68,7 @@ defmodule Chroxy.ChromeProxy do
   ##
   # GenServer Callbacks
 
+  @doc false
   def init(args) do
     chrome_pid = Keyword.get(args, :chrome)
     # We don't need to terminate the underlying proxy if the chrome browser process
@@ -82,6 +83,7 @@ defmodule Chroxy.ChromeProxy do
     {:ok, %{chrome: chrome_pid, page: nil}}
   end
 
+  @doc false
   def handle_call(:chrome_connection, _from, state = %{chrome: chrome, page: nil}) do
     # Create a new page
     page = new_page(chrome)
@@ -107,6 +109,7 @@ defmodule Chroxy.ChromeProxy do
     {:reply, proxy_websocket, state}
   end
 
+  @doc false
   def handle_cast({:down, _proxy_state}, state = %{chrome: chrome, page: page}) do
     Logger.info("Proxy connection down - closing page")
     # Close the page when connection is down, unless chrome process has died

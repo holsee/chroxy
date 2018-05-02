@@ -1,9 +1,18 @@
 defmodule Chroxy.ProxyServer do
+  @moduledoc """
+  Transparent Proxy Server manages the relay of communications between and
+  upstream and downstream tcp connections. Support customer extensions through
+  callbacks of Hook modules which implement the `Chroxy.ProxyServer.Hook` behaviour.
+  """
   use GenServer
 
   require Logger
 
   defmodule Hook do
+    @moduledoc """
+    Behaviour for Proxy Server Hooks.
+    Example: `Chroxy.ChromeProxy`
+    """
     @callback up(identifier(), Keyword.t()) :: [
                 downstream_host: charlist(),
                 downstream_port: non_neg_integer()
@@ -29,10 +38,22 @@ defmodule Chroxy.ProxyServer do
     }
   end
 
+  @doc """
+  Spawns a process to manage connections between upstream and downstream
+  connections.
+
+  Keyword `args`:
+  * `:upstream_socket` - `:gen_tcp` connection delegated from the `Chroxy.ProxyListener`
+  * `:proxy_opts`:
+    * `:downstream_host` - host for downstream connection
+    * `:downstream_port` - port for downstream conenction
+    * `:hook` - name of a module which implements `Chroxy.ProxyServer.Hook`
+  """
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
 
+  @doc false
   def init(args) do
     upstream_socket = Keyword.get(args, :upstream_socket)
     # Proxy can be configured to callback to another module
@@ -65,6 +86,7 @@ defmodule Chroxy.ProxyServer do
      }}
   end
 
+  @doc false
   def handle_info(:init_downstream, state = %{downstream: downstream}) do
     {:ok, down_socket} = :gen_tcp.connect(downstream.host, downstream.port, downstream.tcp_opts)
     Logger.debug("Downstream connection established")

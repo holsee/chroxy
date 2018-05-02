@@ -1,4 +1,9 @@
 defmodule Chroxy.ProxyListener do
+  @moduledoc """
+  Reponsible for accepting upstream connections from client, and delegating
+  ownership of the connection to a new `Chroxy.ProxyServer` process which will
+  in turn create the transparent forwarding channel to the downstream host.
+  """
   use GenServer
 
   require Logger
@@ -23,13 +28,19 @@ defmodule Chroxy.ProxyListener do
     }
   end
 
+  @doc """
+  Spawns a ProxyLister which will listen on the port.
+
+  Keyword `args`:
+  - `:port` - port in which the TCP listener will accept connections.
+  """
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @doc """
-  Accepts incoming tcp connections and spawns a dynamic transparent proxy
-  to handle the connection.
+  Instruct listener to accept incoming tcp connections and spawn a
+  dynamic transparent proxy `Chroxy.ProxySever` to handle the connection.
   """
   def accept(proxy_opts) do
     GenServer.cast(__MODULE__, {:accept, proxy_opts})
@@ -38,6 +49,7 @@ defmodule Chroxy.ProxyListener do
   ##
   # Callbacks
 
+  @doc false
   def init(args) do
     port =
       case Keyword.get(args, :port, "") do
@@ -50,6 +62,7 @@ defmodule Chroxy.ProxyListener do
     {:ok, %{listen_socket: nil}}
   end
 
+  @doc false
   def handle_info({:listen, port}, state = %{listen_socket: nil}) do
     case :gen_tcp.listen(port, @upstream_tcp_opts) do
       {:ok, socket} ->
@@ -67,6 +80,7 @@ defmodule Chroxy.ProxyListener do
     {:noreply, state}
   end
 
+  @doc false
   def handle_cast({:accept, proxy_opts}, state = %{listen_socket: socket}) do
     case :gen_tcp.accept(socket) do
       {:ok, upstream_socket} ->

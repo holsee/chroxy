@@ -7,7 +7,6 @@ defmodule Chroxy.ChromeManager do
   Responsible for the initialisation of chrome browser instance
   when the application boots.
   """
-
   use GenServer
 
   require Logger
@@ -57,6 +56,7 @@ defmodule Chroxy.ChromeManager do
   ##
   # Callbacks
 
+  @doc false
   def init(args) do
     Logger.warn("ARGS: #{inspect(args)}")
     Process.flag(:trap_exit, true)
@@ -66,6 +66,7 @@ defmodule Chroxy.ChromeManager do
     {:ok, %{}}
   end
 
+  @doc false
   def handle_call(:connection, _from, state) do
     chrome = get_chrome_server(:random)
     {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
@@ -73,6 +74,7 @@ defmodule Chroxy.ChromeManager do
     {:reply, proxy_websocket, state}
   end
 
+  @doc false
   def handle_cast({:start_chrome, port}, state) do
     {:ok, chrome} = Chroxy.ChromeServer.Supervisor.start_child(chrome_port: port)
     # Wait for chrome to init and enter a ready state for connections...
@@ -90,6 +92,7 @@ defmodule Chroxy.ChromeManager do
     {:noreply, state}
   end
 
+  @doc false
   def handle_info({:EXIT, pid, reason}, state) do
     Logger.info(
       "ChromeManager linked process #{inspect(pid)} exited with reason: #{inspect(reason)}"
