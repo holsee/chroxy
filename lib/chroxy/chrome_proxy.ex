@@ -3,14 +3,14 @@ defmodule Chroxy.ChromeProxy do
   Process which establishes a single proxied websocket connection
   to an underlying chrome browser page remote debugging websocket.
 
-  Upon initialisation, the chrome proxy signal the `ProxyListener`
-  to accept a TCP connection.  The `ProxyListener` will initialise a
-  `ProxyServer` to manage the connection between the upstream client
+  Upon initialisation, the chrome proxy signal the `Chroxy.ProxyListener`
+  to accept a TCP connection.  The `Chroxy.ProxyListener` will initialise a
+  `Chroxy.ProxyServer` to manage the connection between the upstream client
   and the downstream chrome remote debugging websocket.
 
   When either the upstream or downstream connections close, the `down/2`
-  behaviours `ProxyServer.Hook` callback is invoked, allowing the `ChromeProxy`
-  to close the chrome page.
+  behaviours `Chroxy.ProxyServer.Hook` callback is invoked, allowing the
+  `Chroxy.ChromeProxy` to close the chrome page.
   """
   use GenServer
 
@@ -31,6 +31,12 @@ defmodule Chroxy.ChromeProxy do
     }
   end
 
+  @doc """
+  Spawns `Chroxy.ChromeProxy` process.
+
+  Keyword `args`:
+  - `:chrome` - pid of a `Chroxy.ChromeServer` process.
+  """
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
   end
@@ -51,6 +57,7 @@ defmodule Chroxy.ChromeProxy do
   # Proxy Hook Callbacks
 
   @doc """
+  `Chroxy.ProxyServer` Callback Hook
   Called when upstream or downstream connections are closed.
   Will close the chrome page and shutdown this process.
   """
@@ -127,7 +134,10 @@ defmodule Chroxy.ChromeProxy do
   defp new_page(chrome) do
     case Chroxy.ChromeServer.new_page(chrome) do
       :not_ready ->
-        Logger.debug("Failed to obtain new page, ChromeServer [#{inspect(chrome)}] not ready, retrying...")
+        Logger.debug(
+          "Failed to obtain new page, ChromeServer [#{inspect(chrome)}] not ready, retrying..."
+        )
+
         Chroxy.ChromeServer.ready(chrome)
         new_page(chrome)
 

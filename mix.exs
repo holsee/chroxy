@@ -10,6 +10,7 @@ defmodule Chroxy.MixProject do
       deps: deps(),
       description: description(),
       package: package(),
+      docs: [main: "Chroxy", logo: "logo.png", extras: ["README.md"]]
     ]
   end
 

@@ -7,7 +7,6 @@ defmodule Chroxy.Application do
   require Logger
 
   def start(_type, _args) do
-
     # HACK to get exec running as root.
     Application.put_env(:exec, :root, true)
     {:ok, _} = Application.ensure_all_started(:erlexec)

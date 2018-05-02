@@ -177,19 +177,18 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info(
         {source, pid,
-         <<_::size(@log_head_size),
-           ":ERROR:socket_posix.cc(143)] bind()", _msg::binary>>},
+         <<_::size(@log_head_size), ":ERROR:socket_posix.cc(143)] bind()", _msg::binary>>},
         state
-      ) when source == :stdout or source == :stderr do
+      )
+      when source == :stdout or source == :stderr do
     Logger.error("[CHROME: #{inspect(pid)}] Address / Port already in use. terminating")
     Exexec.stop_and_wait(pid)
     {:stop, :normal, state}
   end
 
   def handle_info(
-      {:stdout, pid,
-        <<_::size(@log_head_size),
-          ":ERROR:crash_handler_host_linux.cc", _rest::binary>> = msg},
+        {:stdout, pid,
+         <<_::size(@log_head_size), ":ERROR:crash_handler_host_linux.cc", _rest::binary>> = msg},
         state
       ) do
     Logger.error("[CHROME: #{inspect(pid)}] #{msg}")
@@ -216,6 +215,7 @@ defmodule Chroxy.ChromeServer do
     session = Session.new(port: chrome_port)
     {:noreply, %{state | session: session}}
   end
+
   def handle_info(
         {:stdout, pid, <<"DevTools listening on ", _rest::binary>> = msg},
         state = %{options: opts}
@@ -246,17 +246,21 @@ defmodule Chroxy.ChromeServer do
 
   def handle_info({:stdout, pid, msg}, state) do
     msg = String.replace(msg, "\r\n", "")
+
     unless msg == "" do
       Logger.info("[CHROME: #{inspect(pid)}] stdout: #{inspect(msg)}")
     end
+
     {:noreply, state}
   end
 
   def handle_info({:stderr, pid, msg}, state) do
     msg = String.replace(msg, "\r\n", "")
+
     unless msg == "" do
       Logger.error("[CHROME: #{inspect(pid)}] stderr: #{inspect(msg)}")
     end
+
     {:noreply, state}
   end
 
