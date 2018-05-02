@@ -89,7 +89,7 @@ $ curl http://localhost:1330/api/v1/connection
 ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 ```
 With this address you can establish the connection to the chrome instance (which
-is routed via an transparent proxy).
+is routed via a transparent proxy).
 
 ## Configuration
 
