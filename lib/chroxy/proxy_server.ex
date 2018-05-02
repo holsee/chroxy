@@ -13,10 +13,24 @@ defmodule Chroxy.ProxyServer do
     Behaviour for Proxy Server Hooks.
     Example: `Chroxy.ChromeProxy`
     """
+
+    @doc """
+    Optional callback invoked when `Chroxy.ProxyServer` is initialised
+    which allows for inteception and addition to the `proxy_opts`
+    used by the proxy server.  Useful for initialising downstream
+    resources, and passing `:downstream_host` & `:downstream_port`
+    for use by `Chroxy.ProxyServer`.
+    """
     @callback up(identifier(), Keyword.t()) :: [
                 downstream_host: charlist(),
                 downstream_port: non_neg_integer()
               ]
+
+    @doc """
+    Optional callback which is invoked when either the upstream
+    or downstream connections are closed.  Useful for cleaning up resources
+    which may have been linked to the lifetime of the proxy connection.
+    """
     @callback down(identifier(), Map.t()) :: :ok
     @optional_callbacks up: 2, down: 2
   end
