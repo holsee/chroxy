@@ -3,20 +3,20 @@
 # Chroxy
 
 A proxy service to mediate access to Chrome that is run in headless mode,
-for use in high frequency application load testing, end-user behaviour
+for use in high-frequency application load testing, end-user behaviour
 simulations and programmatic access to Chrome Devtools.
 
 Enables automatic initialisation of the underlying chrome browser pages upon the
-request for a connection, as well as closing the page once the websocket
+request for a connection, as well as closing the page once the WebSocket
 connection is closed.
 
 This project was born out of necessity, as we needed to orchestrate a large
-number of concurrent browser scenario executions, with low level control and
+number of concurrent browser scenario executions, with low-level control and
 advanced introspection capabilities.
 
 ## Features
 
-* Direct websocket connections to chrome pages, speaking [Chrome Remote Debug
+* Direct WebSocket connections to chrome pages, speaking [Chrome Remote Debug
 protocol](https://chromedevtools.github.io/devtools-protocol/).
 * Provides connections to Chrome Browser Pages via WebSocket connection.
 * Manages Chrome Browser process via Erlang processes using `erlexec`
@@ -31,7 +31,7 @@ instances with *minimal overhead and abstractions*.  Unlike browser testing
 frameworks such as `Hound` and `Wallaby`, Chroxy aims to provide direct
 unfettered access to the underlying browser using the [Chrome Debug
 protocol](https://chromedevtools.github.io/devtools-protocol/) whilst
-enabling many 1000s of concurrent connections channeling these to an underlying
+enabling many 1000s of concurrent connections channelling these to an underlying
 chrome browser resource pool.
 
 ### Elixir Supervision of Chrome OS Processes - Resiliency
@@ -122,15 +122,15 @@ Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
 
 ### Proxy
 
-A intermediary TCP proxy is in place to allow for monitoring of the _upstream_
-client and _downstream_ chrome RSP web socket connections, in order to cleanup
+An intermediary TCP proxy is in place to allow for monitoring of the _upstream_
+client and _downstream_ chrome RSP web socket connections, in order to clean up
 resources after connections are closed.
 
 `Chroxy.ProxyListener` - Incoming Connection Management & Delegation
-* Listens for incoming connections on a given PORT.
+* Listens for incoming connections on `CHROXY_PROXY_HOST`:`CHROXY_PROXY_PORT`.
 * Exposes `accept/1` function which will accept the next _upstream_ TCP connection and
   delegate the connection to a `ProxyServer` process along with the `proxy_opts`
-  which enable dynamic configuration of the _downstream_ connection.
+  which enables the dynamic configuration of the _downstream_ connection.
 
 `Chroxy.ProxyServer` - Dynamically Configured Transparent Proxy
 * A dynamically configured transparent proxy.
@@ -139,16 +139,16 @@ resources after connections are closed.
   `ProxyServer.Hook.up/2` hook modules response, at initialisation.
 
 `Chroxy.ProxyServer.Hook` - Behaviour for `ProxyServer` hooks. Example: `ChromeProxy`
-* A mechanism by which a module / server can be invoked when a `ProxyServer`
+* A mechanism by which a module/server can be invoked when a `ProxyServer`
   process is coming _up_ or _down_.
 * Two _optional_ callbacks can be implemented:
   * `@spec up(indentifier(), proxy_opts()) :: proxy_opts()`
-    * provides the registered process with option to add or change proxy
+    * provides the registered process with the option to add or change proxy
       options prior to downstream connection initialisation.
   * `@spec down(indentifier(), proxy_state) :: :ok`
-    * provides the registered process with signal that the proxy connection is
-      about to terminate, due to either _upstream_ or _downstream_ connections
-      closing.
+    * provides the registered process with a signal that the proxy connection 
+       is about to terminate, due to either _upstream_ or _downstream_ 
+       connections closing.
 
 ### Chrome Browser Management
 
@@ -156,11 +156,11 @@ Chrome is the first browser supported, and the following server processes manage
 the communication and lifetime of the Chrome Browsers and Tabs.
 
 `Chroxy.ChromeProxy` - Implements `ProxyServer.Hook` for Chrome resource management
-* Exposes function `connection/1` which returns the websocket connection to the
-  browser tab, with the proxy host and port substituted in order to route the
-  connection via the underlying `ProxyServer` process.
+* Exposes function `connection/1` which returns the websocket connection 
+    to the browser tab, with the proxy host and port substituted in order to 
+   route the connection via the underlying `ProxyServer` process.
 * Registers for callbacks from the underlying `ProxyServer`, implementing the
-  `down/2` callback in order to cleanup the Chrome resource when connections
+  `down/2` callback in order to clean up the Chrome resource when connections
   close.
 
 `Chroxy.ChromeServer` - Wraps Chrome Browser OS Process
@@ -180,7 +180,7 @@ the communication and lifetime of the Chrome Browsers and Tabs.
 `GET /api/v1/connection`
 
 Returns WebSocket URI `ws://` to a Chrome Browser Page which is routed via the
-Proxy.  The first port of call for external client connecting to the service.
+Proxy.  This is the first port of call for an external client connecting to the service.
 
 Request:
 ```
