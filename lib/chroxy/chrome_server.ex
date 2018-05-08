@@ -64,6 +64,7 @@ defmodule Chroxy.ChromeServer do
   Keyword `opts`:
   * `:retries` - number to times to poll for _ready_ state.
   * `:wait_ms` - how long to _sleep_ between polling calls.
+  * `:crash_dumps_dir` - where chrome should write crash dumps.
   """
   def ready(server, opts \\ []) do
     retries = Keyword.get(opts, :retries, 5)
@@ -129,9 +130,13 @@ defmodule Chroxy.ChromeServer do
   @doc false
   def init(args) do
     config = Application.get_env(:chroxy, __MODULE__)
+
+    opts =
+      default_opts()
+      |> Keyword.merge(config)
+      |> Keyword.merge(args)
+
     page_wait_ms = Keyword.get(config, :page_wait_ms) |> String.to_integer()
-    # TODO we will want to get the chrome browser options from config too
-    opts = Keyword.merge(default_opts(), args)
     send(self(), :launch)
     Process.send_after(self(), :stop_if_not_ready, @ready_check_ms)
     {:ok, %{options: opts, session: nil, page_wait_ms: page_wait_ms}}
@@ -175,31 +180,22 @@ defmodule Chroxy.ChromeServer do
 
   @doc false
   def handle_info(:launch, state = %{options: opts}) do
-    # Check tmp dir is writable, otherwise stop
-    case System.tmp_dir() do
-      nil ->
-        Logger.error("No writable tmp dir")
-        {:stop, :normal, state}
+    value_flags = ~w(
+        --remote-debugging-port=#{opts[:chrome_port]}
+        --crash-dumps-dir=#{opts[:crash_dumps_dir]}
+        --v=#{opts[:verbose_logging]}
+      )
 
-      tmp_path ->
-        Logger.info("Setting chrome data dir and tmp dir to: #{tmp_path}")
+    chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
 
-        value_flags = ~w(
-          --remote-debugging-port=#{opts[:chrome_port]}
-          --crash-dumps-dir=#{tmp_path}
-          --user-data-dir=#{tmp_path}
-        )
-        chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
+    command =
+      [chrome_path, opts[:chrome_flags], value_flags]
+      |> List.flatten()
+      |> Enum.join(" ")
 
-        command =
-          [chrome_path, opts[:chrome_flags], value_flags]
-          |> List.flatten()
-          |> Enum.join(" ")
-
-        {:ok, pid, os_pid} = Exexec.run_link(command, exec_options())
-        state = Map.merge(%{command: command, pid: pid, os_pid: os_pid}, state)
-        {:noreply, state}
-    end
+    {:ok, pid, os_pid} = Exexec.run_link(command, exec_options())
+    state = Map.merge(%{command: command, pid: pid, os_pid: os_pid}, state)
+    {:noreply, state}
   end
 
   def handle_info(:stop_if_not_ready, state = %{session: nil, os_pid: os_pid}) do
@@ -245,6 +241,13 @@ defmodule Chroxy.ChromeServer do
   def handle_info({:stdout, pid, <<_::size(@log_head_size), ":ERROR:", msg::binary>>}, state) do
     msg = String.replace(msg, "\r\n", "")
     Logger.error("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
+    {:noreply, state}
+  end
+
+  def handle_info({device, pid, <<_::size(@log_head_size), ":VERBOSE1:", msg::binary>>}, state)
+    when device == :stdout or device == :stderr do
+    msg = String.replace(msg, "\r\n", "")
+    Logger.debug("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
     {:noreply, state}
   end
 
@@ -328,7 +331,6 @@ defmodule Chroxy.ChromeServer do
         --disable-background-networking
         --safebrowsing-disable-auto-update
         --enable-logging
-        --v=1
         --disable-sync
         --metrics-recording-only
         --disable-default-apps
@@ -336,7 +338,9 @@ defmodule Chroxy.ChromeServer do
         --no-first-run
         --no-sandbox
         --incognito
-      )
+      ),
+      verbose_logging: 0,
+      crash_dumps_dir: "/tmp"
     ]
   end
 

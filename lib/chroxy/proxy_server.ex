@@ -83,6 +83,13 @@ defmodule Chroxy.ProxyServer do
     opts = Keyword.merge(proxy_opts, hook_opts || [])
     downstream_host = Keyword.get(opts, :downstream_host)
     downstream_port = Keyword.get(opts, :downstream_port)
+
+    # check args for packet_trace, otherwise check config
+    packet_trace =
+      Keyword.get(opts, :packet_trace, false) ||
+        Application.get_env(:chroxy, Chroxy.ProxyServer, [])
+        |> Keyword.get(:packet_trace, false)
+
     send(self(), :init_downstream)
 
     {:ok,
@@ -96,7 +103,8 @@ defmodule Chroxy.ProxyServer do
          tcp_opts: @downstream_tcp_opts,
          socket: nil
        },
-       hook: hook
+       hook: hook,
+       packet_trace: packet_trace
      }}
   end
 
@@ -119,7 +127,10 @@ defmodule Chroxy.ProxyServer do
         {:tcp, downstream_socket, data},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.debug("Up <- Down: #{inspect(data)}")
+    if state.packet_trace do
+      Logger.debug("Up <- Down: #{inspect(data)}")
+    end
+
     :gen_tcp.send(upstream_socket, data)
     {:noreply, state}
   end
@@ -128,7 +139,10 @@ defmodule Chroxy.ProxyServer do
         {:tcp, upstream_socket, data},
         state = %{upstream: %{socket: upstream_socket}, downstream: %{socket: downstream_socket}}
       ) do
-    Logger.debug("Up -> Down: #{inspect(data)}")
+    if state.packet_trace do
+      Logger.debug("Up -> Down: #{inspect(data)}")
+    end
+
     :gen_tcp.send(downstream_socket, data)
     {:noreply, state}
   end
