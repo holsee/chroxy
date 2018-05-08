@@ -244,6 +244,13 @@ defmodule Chroxy.ChromeServer do
     {:noreply, state}
   end
 
+  def handle_info({device, pid, <<_::size(@log_head_size), ":VERBOSE1:", msg::binary>>}, state)
+    when device == :stdout or device == :stderr do
+    msg = String.replace(msg, "\r\n", "")
+    Logger.debug("[CHROME: #{inspect(pid)}] #{inspect(msg)}")
+    {:noreply, state}
+  end
+
   # TODO refactor messages from logs to remove "\r\n" once / create module to
   # handle log parsing
   def handle_info(
@@ -332,7 +339,7 @@ defmodule Chroxy.ChromeServer do
         --no-sandbox
         --incognito
       ),
-      verbose_logging: 1,
+      verbose_logging: 0,
       crash_dumps_dir: "/tmp"
     ]
   end
