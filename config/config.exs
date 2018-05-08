@@ -40,4 +40,5 @@ config :chroxy, Chroxy.Endpoint,
   port: envar.("CHROXY_ENDPOINT_PORT") || "1330"
 
 config :chroxy, Chroxy.ChromeServer,
-  page_wait_ms: envar.("CHROXY_CHROME_SERVER_PAGE_WAIT_MS") || "50"
+  page_wait_ms: envar.("CHROXY_CHROME_SERVER_PAGE_WAIT_MS") || "50",
+

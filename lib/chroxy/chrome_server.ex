@@ -188,7 +188,8 @@ defmodule Chroxy.ChromeServer do
           --remote-debugging-port=#{opts[:chrome_port]}
           --crash-dumps-dir=#{tmp_path}
           --user-data-dir=#{tmp_path}
-        )
+        ) ++ if Logger.level() == :debug, do: ["--v=1"], else: []
+
         chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
 
         command =
@@ -328,7 +329,6 @@ defmodule Chroxy.ChromeServer do
         --disable-background-networking
         --safebrowsing-disable-auto-update
         --enable-logging
-        --v=1
         --disable-sync
         --metrics-recording-only
         --disable-default-apps
