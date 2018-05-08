@@ -109,15 +109,17 @@ include_config "../deps/chroxy/config/config.exs"
 
 Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
 
-| Variable                          | Default       | Desc.                                                      |
-| :------------------------         | :------------ | :--------------------------------------------------------- |
-| CHROXY_CHROME_PORT_FROM           | 9222          | Starting port in the Chrome Browser port range             |
-| CHROXY_CHROME_PORT_TO             | 9223          | Last port in the Chrome Browser port range                 |
-| CHROXY_PROXY_HOST                 | "127.0.0.1"   | Host which is substituted to route connections via proxy   |
-| CHROXY_PROXY_PORT                 | 1331          | Port which proxy listener will accept connections on       |
-| CHROXY_ENDPOINT_SCHEME            | :http         | `HTTP` or `HTTPS`                                          |
-| CHROXY_ENDPOINT_PORT              | 1330          | HTTP API will register on this port                        |
-| CHROXY_CHROME_SERVER_PAGE_WAIT_MS | 50            | Milliseconds to wait after asking chrome to create a page  |
+| Variable                             | Default       | Desc.                                                      |
+| :------------------------            | :------------ | :--------------------------------------------------------- |
+| CHROXY_CHROME_PORT_FROM              | 9222          | Starting port in the Chrome Browser port range             |
+| CHROXY_CHROME_PORT_TO                | 9223          | Last port in the Chrome Browser port range                 |
+| CHROXY_PROXY_HOST                    | "127.0.0.1"   | Host which is substituted to route connections via proxy   |
+| CHROXY_PROXY_PORT                    | 1331          | Port which proxy listener will accept connections on       |
+| CHROXY_ENDPOINT_SCHEME               | :http         | `HTTP` or `HTTPS`                                          |
+| CHROXY_ENDPOINT_PORT                 | 1330          | HTTP API will register on this port                        |
+| CHROXY_CHROME_SERVER_PAGE_WAIT_MS    | 50            | Milliseconds to wait after asking chrome to create a page  |
+| CHROME_CHROME_SERVER_CRASH_DUMPS_DIR | "/tmp"        | Directory to which chrome will write crash dumps           |
+
 ## Components
 
 ### Proxy
@@ -146,8 +148,8 @@ resources after connections are closed.
     * provides the registered process with the option to add or change proxy
       options prior to downstream connection initialisation.
   * `@spec down(indentifier(), proxy_state) :: :ok`
-    * provides the registered process with a signal that the proxy connection 
-       is about to terminate, due to either _upstream_ or _downstream_ 
+    * provides the registered process with a signal that the proxy connection
+       is about to terminate, due to either _upstream_ or _downstream_
        connections closing.
 
 ### Chrome Browser Management
@@ -156,8 +158,8 @@ Chrome is the first browser supported, and the following server processes manage
 the communication and lifetime of the Chrome Browsers and Tabs.
 
 `Chroxy.ChromeProxy` - Implements `ProxyServer.Hook` for Chrome resource management
-* Exposes function `connection/1` which returns the websocket connection 
-    to the browser tab, with the proxy host and port substituted in order to 
+* Exposes function `connection/1` which returns the websocket connection
+    to the browser tab, with the proxy host and port substituted in order to
    route the connection via the underlying `ProxyServer` process.
 * Registers for callbacks from the underlying `ProxyServer`, implementing the
   `down/2` callback in order to clean up the Chrome resource when connections
