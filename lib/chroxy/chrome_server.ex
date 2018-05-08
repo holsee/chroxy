@@ -130,9 +130,12 @@ defmodule Chroxy.ChromeServer do
   @doc false
   def init(args) do
     config = Application.get_env(:chroxy, __MODULE__)
-    opts = default_opts()
-           |> Keyword.merge(config)
-           |> Keyword.merge(args)
+
+    opts =
+      default_opts()
+      |> Keyword.merge(config)
+      |> Keyword.merge(args)
+
     page_wait_ms = Keyword.get(config, :page_wait_ms) |> String.to_integer()
     send(self(), :launch)
     Process.send_after(self(), :stop_if_not_ready, @ready_check_ms)
@@ -177,23 +180,22 @@ defmodule Chroxy.ChromeServer do
 
   @doc false
   def handle_info(:launch, state = %{options: opts}) do
-
-      value_flags = ~w(
+    value_flags = ~w(
         --remote-debugging-port=#{opts[:chrome_port]}
         --crash-dumps-dir=#{opts[:crash_dumps_dir]}
         --v=#{opts[:verbose_logging]}
       )
 
-      chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
+    chrome_path = String.replace(opts[:chrome_path], " ", "\\ ")
 
-      command =
-        [chrome_path, opts[:chrome_flags], value_flags]
-        |> List.flatten()
-        |> Enum.join(" ")
+    command =
+      [chrome_path, opts[:chrome_flags], value_flags]
+      |> List.flatten()
+      |> Enum.join(" ")
 
-      {:ok, pid, os_pid} = Exexec.run_link(command, exec_options())
-      state = Map.merge(%{command: command, pid: pid, os_pid: os_pid}, state)
-      {:noreply, state}
+    {:ok, pid, os_pid} = Exexec.run_link(command, exec_options())
+    state = Map.merge(%{command: command, pid: pid, os_pid: os_pid}, state)
+    {:noreply, state}
   end
 
   def handle_info(:stop_if_not_ready, state = %{session: nil, os_pid: os_pid}) do
@@ -344,5 +346,4 @@ defmodule Chroxy.ChromeServer do
         "/usr/bin/google-chrome"
     end
   end
-
 end
