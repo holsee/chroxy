@@ -98,13 +98,28 @@ environment variables
 
 ### Chroxy as a Library
 
-If using Chroxy as a dependency of another mix projects you may wish to leverage
-the configuration implementation of Chroxy by including the _config_ like
-so in your `config/config.exs` file:
+``` elixir
+def deps do
+  [{:chroxy, "~> 1.3"}]
+end
+```
 
+If using Chroxy as a dependency of another mix projects you may wish to leverage
+the configuration implementation of Chroxy by replication the configuration in
+`"../deps/chroxy/config/config.exs"`.
+
+Example: Create a Page Session, Registering for Event and Navigating to URL
+
+``` elixir
+ws_addr = Chroxy.connection()
+{:ok, page} = ChromeRemoteInterface.PageSession.start_link(ws_url)
+ChromeRemoteInterface.RPC.Page.enable(page)
+ChromeRemoteInterface.PageSession.subscribe(page, "Page.loadEventFired", self())
+url = "https://github.com/holsee"
+{:ok, _} = ChromeRemoteInterface.RPC.Page.navigate(page, %{url: url})
+# Message Received by self() => {:chrome_remote_interface, "Page.loadEventFired", _}
 ```
-include_config "../deps/chroxy/config/config.exs"
-```
+
 ### Configuration Variables
 
 Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
