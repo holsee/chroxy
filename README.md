@@ -132,7 +132,7 @@ Ports, Proxy Host and Endpoint Scheme are managed via Env Vars.
 | CHROXY_PROXY_PORT                    | 1331          | Port which proxy listener will accept connections on       |
 | CHROXY_ENDPOINT_SCHEME               | :http         | `HTTP` or `HTTPS`                                          |
 | CHROXY_ENDPOINT_PORT                 | 1330          | HTTP API will register on this port                        |
-| CHROXY_CHROME_SERVER_PAGE_WAIT_MS    | 50            | Milliseconds to wait after asking chrome to create a page  |
+| CHROXY_CHROME_SERVER_PAGE_WAIT_MS    | 200           | Milliseconds to wait after asking chrome to create a page  |
 | CHROME_CHROME_SERVER_CRASH_DUMPS_DIR | "/tmp"        | Directory to which chrome will write crash dumps           |
 
 ## Components
