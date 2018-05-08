@@ -100,7 +100,7 @@ environment variables
 
 ``` elixir
 def deps do
-  [{:chroxy, "~> 1.3"}]
+  [{:chroxy, "~> 0.3"}]
 end
 ```
 
