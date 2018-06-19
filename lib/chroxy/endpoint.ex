@@ -20,6 +20,10 @@ defmodule Chroxy.Endpoint do
     send_resp(conn, 200, endpoint)
   end
 
+  get "/healthcheck" do
+    send_resp(conn, 200, "OK")
+  end
+
   match _ do
     send_resp(conn, 404, "oops")
   end
