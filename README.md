@@ -1,6 +1,6 @@
 ![](logo.png)
 
-# Chroxy
+# Chroxy [![Build Status](https://travis-ci.org/holsee/chroxy.svg?branch=master)](https://travis-ci.org/holsee/chroxy)
 
 A proxy service to mediate access to Chrome that is run in headless mode,
 for use in high-frequency application load testing, end-user behaviour
