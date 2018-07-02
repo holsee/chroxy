@@ -55,10 +55,8 @@ defmodule Chroxy.BrowserPool do
 
   @doc false
   def handle_call({:connection, :chrome}, _from, state) do
-    chrome = Chroxy.BrowserPool.Chrome.get_browser(:next)
-    {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
-    proxy_websocket = Chroxy.ChromeProxy.chrome_connection(pid)
-    {:reply, proxy_websocket, state}
+    connection = Chroxy.BrowserPool.Chrome.get_connection()
+    {:reply, connection, state}
   end
 
   @doc false
@@ -100,6 +98,16 @@ defmodule Chroxy.BrowserPool.Chrome do
     |> List.first()
   end
 
+  def get_connection() do
+    :next
+    |> get_browser()
+    |> get_connection()
+  end
+
+  def get_connection(chrome) do
+    GenServer.call(__MODULE__, {:get_connection, chrome})
+  end
+
   # Callbacks
 
   def init([]) do
@@ -135,6 +143,30 @@ defmodule Chroxy.BrowserPool.Chrome do
     browsers = pool()
     idx = Integer.mod(access_count, Enum.count(browsers))
     {:reply, Enum.at(browsers, idx), %{state | access_count: access_count + 1}}
+  end
+
+  @doc false
+  def handle_call({:get_connection, chrome}, _from, state) do
+    {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
+    url = Chroxy.ChromeProxy.chrome_connection(pid)
+    page_id = page_id({:url, url})
+    IO.inspect(page_id_url: page_id)
+    Chroxy.ProxyRouter.put(page_id, pid)
+    {:reply, url, state}
+  end
+
+  def page_id({:url, url}) do
+    url
+    |> String.split("/")
+    |> List.last()
+  end
+
+  def page_id({:http_request, data}) do
+    data
+    |> String.split(" HTTP")
+    |> List.first()
+    |> String.split("GET /devtools/page/")
+    |> Enum.at(1)
   end
 
   @doc """

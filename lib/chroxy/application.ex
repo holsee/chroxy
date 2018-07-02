@@ -17,7 +17,8 @@ defmodule Chroxy.Application do
       Chroxy.ProxyListener.child_spec(proxy_opts),
       Chroxy.ChromeServer.Supervisor.child_spec(),
       Chroxy.BrowserPool.child_spec(),
-      Chroxy.Endpoint.child_spec()
+      Chroxy.Endpoint.child_spec(),
+      Chroxy.ProxyRouter.child_spec()
     ]
 
     Logger.info("Started application")
