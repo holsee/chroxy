@@ -39,7 +39,7 @@ defmodule Chroxy.BrowserPool do
   Request new page websocket url.
   """
   def connection(browser) when is_supported(browser) do
-    GenServer.call(__MODULE__, {:connection, browser})
+    GenServer.call(__MODULE__, {:connection, browser}, 60_000)
   end
 
   ##
@@ -55,10 +55,8 @@ defmodule Chroxy.BrowserPool do
 
   @doc false
   def handle_call({:connection, :chrome}, _from, state) do
-    chrome = Chroxy.BrowserPool.Chrome.get_browser(:next)
-    {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
-    proxy_websocket = Chroxy.ChromeProxy.chrome_connection(pid)
-    {:reply, proxy_websocket, state}
+    connection = Chroxy.BrowserPool.Chrome.get_connection()
+    {:reply, connection, state}
   end
 
   @doc false
@@ -100,6 +98,16 @@ defmodule Chroxy.BrowserPool.Chrome do
     |> List.first()
   end
 
+  def get_connection() do
+    :next
+    |> get_browser()
+    |> get_connection()
+  end
+
+  def get_connection(chrome) do
+    GenServer.call(__MODULE__, {:get_connection, chrome})
+  end
+
   # Callbacks
 
   def init([]) do
@@ -119,8 +127,7 @@ defmodule Chroxy.BrowserPool.Chrome do
     case Chroxy.ChromeServer.ready(chrome) do
       :ready ->
         # when ready close the pages which are openned by default
-        # :ok = Chroxy.ChromeServer.close_all_pages(chrome)
-        :ok
+        :ok = Chroxy.ChromeServer.close_all_pages(chrome)
 
       :timeout ->
         # failed to become ready in an acceptable timeframe
@@ -137,6 +144,29 @@ defmodule Chroxy.BrowserPool.Chrome do
     {:reply, Enum.at(browsers, idx), %{state | access_count: access_count + 1}}
   end
 
+  @doc false
+  def handle_call({:get_connection, chrome}, _from, state) do
+    {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
+    url = Chroxy.ChromeProxy.chrome_connection(pid)
+    page_id = page_id({:url, url})
+    Chroxy.ProxyRouter.put(page_id, pid)
+    {:reply, url, state}
+  end
+
+  def page_id({:url, url}) do
+    url
+    |> String.split("/")
+    |> List.last()
+  end
+
+  def page_id({:http_request, data}) do
+    data
+    |> String.split(" HTTP")
+    |> List.first()
+    |> String.split("GET /devtools/page/")
+    |> Enum.at(1)
+  end
+
   @doc """
   List active worker processes in pool.
   """
@@ -144,9 +174,7 @@ defmodule Chroxy.BrowserPool.Chrome do
     Chroxy.ChromeServer.Supervisor.which_children()
     |> Enum.filter(fn
          ({_, p, :worker, _}) when is_pid(p) ->
-           # Only allow "Ready processes through", a short blocking readyness
-           # call will ensure this, whilst not blocking consumer for too long.
-           Chroxy.ChromeServer.ready(p, retries: 5, wait_ms: 10) == :ready
+           Chroxy.ChromeServer.ready(p) == :ready
          (_) -> false
        end)
     |> Enum.map(&elem(&1, 1))

@@ -46,15 +46,20 @@ defmodule Chroxy.ChromeProxy do
   routed via the underlying proxy.
   """
   def chrome_connection(ref) do
-    proxy_ws = GenServer.call(ref, :chrome_connection)
-    # TODO we may wish to timebomb if `up/2` is not called i.e. client
-    # connection not established.  We would also want to place a timeout on the
-    # accept.
-    proxy_ws
+    GenServer.call(ref, :chrome_connection)
   end
 
   ##
   # Proxy Hook Callbacks
+
+  @doc """
+  `Chroxy.ProxyServer` Callback Hook
+  Called when upstream connection is established to ProxyServer.
+  Will return downstream connection information of the Chrome instance.
+  """
+  def up(ref, proxy_state) do
+    GenServer.call(ref, {:up, proxy_state})
+  end
 
   @doc """
   `Chroxy.ProxyServer` Callback Hook
@@ -80,7 +85,7 @@ defmodule Chroxy.ChromeProxy do
     Process.flag(:trap_exit, true)
     Process.link(chrome_pid)
 
-    {:ok, %{chrome: chrome_pid, page: nil}}
+    {:ok, %{chrome: chrome_pid, page: nil, proxy_opts: nil}}
   end
 
   @doc false
@@ -94,19 +99,39 @@ defmodule Chroxy.ChromeProxy do
     # have the downstream information available at tcp listener accept time).
     uri = page["webSocketDebuggerUrl"] |> URI.parse()
 
-    Chroxy.ProxyListener.accept(
-      hook: %{mod: __MODULE__, ref: self()},
-      downstream_host: uri.host |> String.to_charlist(),
-      downstream_port: uri.port
-    )
+    # Asynchronously signal the listen to accept connection, which will spawn a
+    # ProxyServer to handle the communications.  The ProxyServer will be passed
+    # the lookup function which will find downstream connection options based on
+    # the incomming request
+    Chroxy.ProxyListener.accept(dyn_hook: fn(req) ->
+      %{
+        mod: Chroxy.ChromeProxy,
+        ref: Chroxy.BrowserPool.Chrome.page_id({:http_request, req})
+             |> Chroxy.ProxyRouter.get()
+      }
+    end)
 
     proxy_websocket = proxy_websocket_addr(page)
-    {:reply, proxy_websocket, %{state | page: page}}
+    {:reply, proxy_websocket,
+      %{state |
+        page: page,
+        proxy_opts: [
+          downstream_host: uri.host |> String.to_charlist(),
+          downstream_port: uri.port
+        ]
+      }
+    }
   end
 
+  @doc false
   def handle_call(:chrome_connection, _from, state = %{page: page}) do
     proxy_websocket = proxy_websocket_addr(page)
     {:reply, proxy_websocket, state}
+  end
+
+  @doc false
+  def handle_call({:up, _proxy_state}, _from, state = %{proxy_opts: proxy_opts}) do
+    {:reply, proxy_opts, state}
   end
 
   @doc false
