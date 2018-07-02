@@ -25,15 +25,14 @@ defmodule Chroxy.ProxyRouter do
   end
 
   def init(_) do
-    opts = [:public, :set, :named_table,
+    opts = [:protected, :set, :named_table,
             read_concurrency: true, write_concurrency: true]
     :ets.new(@tbl, opts)
     {:ok, %{table: @tbl}}
   end
 
   def put(key, proc) do
-    ref = Process.monitor(proc)
-    :ets.insert(@tbl, {key, proc, ref})
+    GenServer.cast(__MODULE__, {:put, key, proc})
   end
 
   def get(key) do
@@ -41,6 +40,12 @@ defmodule Chroxy.ProxyRouter do
       [] -> nil
       [{_, browser,_}|_] -> browser
     end
+  end
+
+  def handle_cast({:put, key, proc}, state) do
+    ref = Process.monitor(proc)
+    :ets.insert(@tbl, {key, proc, ref})
+    {:noreply, state}
   end
 
   def handle_info({:DOWN, ref, :process, _object, _reason}, state) do
