@@ -39,7 +39,7 @@ defmodule Chroxy.BrowserPool do
   Request new page websocket url.
   """
   def connection(browser) when is_supported(browser) do
-    GenServer.call(__MODULE__, {:connection, browser})
+    GenServer.call(__MODULE__, {:connection, browser}, 60_000)
   end
 
   ##
