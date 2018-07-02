@@ -176,9 +176,7 @@ defmodule Chroxy.BrowserPool.Chrome do
     Chroxy.ChromeServer.Supervisor.which_children()
     |> Enum.filter(fn
          ({_, p, :worker, _}) when is_pid(p) ->
-           # Only allow "Ready processes through", a short blocking readyness
-           # call will ensure this, whilst not blocking consumer for too long.
-           Chroxy.ChromeServer.ready(p, retries: 5, wait_ms: 10) == :ready
+           Chroxy.ChromeServer.ready(p) == :ready
          (_) -> false
        end)
     |> Enum.map(&elem(&1, 1))
