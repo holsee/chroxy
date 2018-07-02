@@ -58,10 +58,7 @@ defmodule Chroxy.ProxyServer do
 
   Keyword `args`:
   * `:upstream_socket` - `:gen_tcp` connection delegated from the `Chroxy.ProxyListener`
-  * `:proxy_opts`:
-    * `:downstream_host` - host for downstream connection
-    * `:downstream_port` - port for downstream conenction
-    * `:hook` - name of a module which implements `Chroxy.ProxyServer.Hook`
+    * `:dyn_hook` - function to obtain a module which implements `Chroxy.ProxyServer.Hook`
   """
   def start_link(args) do
     GenServer.start_link(__MODULE__, args)
@@ -72,17 +69,8 @@ defmodule Chroxy.ProxyServer do
     upstream_socket = Keyword.get(args, :upstream_socket)
     # Proxy can be configured to callback to another module
     # which will optionally implement hook functions
-    proxy_opts = Keyword.get(args, :proxy_opts)
-    hook = Keyword.get(proxy_opts, :hook)
-
-    hook_opts =
-      if hook && function_exported?(hook.mod, :up, 2) do
-        apply(hook.mod, :up, [hook.ref, args])
-      end
-
-    opts = Keyword.merge(proxy_opts, hook_opts || [])
-    downstream_host = Keyword.get(opts, :downstream_host)
-    downstream_port = Keyword.get(opts, :downstream_port)
+    opts = Keyword.get(args, :proxy_opts)
+    dyn_hook = Keyword.get(opts, :dyn_hook)
 
     # check args for packet_trace, otherwise check config
     packet_trace =
@@ -90,37 +78,60 @@ defmodule Chroxy.ProxyServer do
         Application.get_env(:chroxy, Chroxy.ProxyServer, [])
         |> Keyword.get(:packet_trace, false)
 
-    send(self(), :init_downstream)
-
     {:ok,
      %{
        upstream: %{
          socket: upstream_socket
        },
        downstream: %{
-         host: downstream_host,
-         port: downstream_port,
+         host: nil,
+         port: nil,
          tcp_opts: @downstream_tcp_opts,
          socket: nil
        },
-       hook: hook,
+       dyn_hook: dyn_hook,
        packet_trace: packet_trace
      }}
   end
 
   @doc false
-  def handle_info(:init_downstream, state = %{downstream: downstream}) do
-    {:ok, down_socket} = :gen_tcp.connect(downstream.host, downstream.port, downstream.tcp_opts)
+  def handle_info(
+        msg = {:tcp, downstream_socket, data},
+        state = %{
+          dyn_hook: dyn_hook,
+          upstream: %{socket: upstream_socket},
+          downstream: downstream = %{tcp_opts: tcp_opts, socket: nil}
+        }
+    ) do
+
+    hook = dyn_hook.(data)
+    proxy_opts = apply(hook.mod, :downstream_options, [hook.ref])
+
+    hook_opts =
+      if hook && function_exported?(hook.mod, :up, 2) do
+        apply(hook.mod, :up, [hook.ref, state])
+      end
+
+    opts = Keyword.merge(proxy_opts, hook_opts || [])
+    downstream_host = Keyword.get(opts, :downstream_host)
+    downstream_port = Keyword.get(opts, :downstream_port)
+
+      {:ok, down_socket} = :gen_tcp.connect(downstream_host, downstream_port, tcp_opts)
     Logger.debug("Downstream connection established")
 
-    {:noreply,
-     %{
-       state
-       | downstream: %{
-           downstream
-           | socket: down_socket
-         }
-     }}
+    send(self(), msg) # reprocess the message now that downstream connection is available
+
+    state = %{
+        state
+        | downstream: %{
+          downstream
+          |
+          host: downstream_host,
+          port: downstream_port,
+          socket: down_socket
+        }
+      }
+    {:noreply, state}
   end
 
   def handle_info(

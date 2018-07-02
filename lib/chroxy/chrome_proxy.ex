@@ -53,6 +53,10 @@ defmodule Chroxy.ChromeProxy do
     proxy_ws
   end
 
+  def downstream_options(ref) do
+    GenServer.call(ref, :downstream_options)
+  end
+
   ##
   # Proxy Hook Callbacks
 
@@ -80,7 +84,7 @@ defmodule Chroxy.ChromeProxy do
     Process.flag(:trap_exit, true)
     Process.link(chrome_pid)
 
-    {:ok, %{chrome: chrome_pid, page: nil}}
+    {:ok, %{chrome: chrome_pid, page: nil, proxy_opts: nil}}
   end
 
   @doc false
@@ -94,14 +98,33 @@ defmodule Chroxy.ChromeProxy do
     # have the downstream information available at tcp listener accept time).
     uri = page["webSocketDebuggerUrl"] |> URI.parse()
 
-    Chroxy.ProxyListener.accept(
-      hook: %{mod: __MODULE__, ref: self()},
-      downstream_host: uri.host |> String.to_charlist(),
-      downstream_port: uri.port
-    )
+    # Asynchronously signal the listen to accept connection, which will spawn a
+    # ProxyServer to handle the communications.  The ProxyServer will be passed
+    # the lookup function which will find downstream connection options based on
+    # the incomming request
+    Chroxy.ProxyListener.accept(dyn_hook: fn(req) ->
+      %{
+        mod: Chroxy.ChromeProxy,
+        ref: Chroxy.BrowserPool.Chrome.page_id({:http_request, req})
+             |> Chroxy.ProxyRouter.get()
+      }
+    end)
 
     proxy_websocket = proxy_websocket_addr(page)
-    {:reply, proxy_websocket, %{state | page: page}}
+    {:reply, proxy_websocket,
+      %{state |
+        page: page,
+        proxy_opts: [
+          hook: %{mod: __MODULE__, ref: self()},
+          downstream_host: uri.host |> String.to_charlist(),
+          downstream_port: uri.port
+        ]
+      }
+    }
+  end
+
+  def handle_call(:downstream_options, _from, state = %{proxy_opts: proxy_opts}) do
+    {:reply, proxy_opts, state}
   end
 
   def handle_call(:chrome_connection, _from, state = %{page: page}) do
