@@ -12,6 +12,6 @@ defmodule Chroxy do
   """
   @spec connection() :: url()
   def connection do
-    Chroxy.ChromeManager.connection()
+    Chroxy.BrowserPool.connection(:chrome)
   end
 end
