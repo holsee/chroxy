@@ -11,13 +11,12 @@ defmodule Chroxy.Application do
     Application.put_env(:exec, :root, true)
     {:ok, _} = Application.ensure_all_started(:erlexec)
 
-    chroxy_opts = Application.get_all_env(:chroxy)
     proxy_opts = Application.get_env(:chroxy, Chroxy.ProxyListener)
 
     children = [
       Chroxy.ProxyListener.child_spec(proxy_opts),
       Chroxy.ChromeServer.Supervisor.child_spec(),
-      Chroxy.ChromeManager.child_spec(chroxy_opts),
+      Chroxy.BrowserPool.child_spec(),
       Chroxy.Endpoint.child_spec()
     ]
 

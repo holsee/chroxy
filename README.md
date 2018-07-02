@@ -186,11 +186,13 @@ the communication and lifetime of the Chrome Browsers and Tabs.
   around page creation, access and closing.
 * Translates browser logging to elixir logging, with correct levels.
 
-`Chroxy.ChromeManager` - Inits & Controls access to pool of `Chroxy.ChromeServer` processes
-* Manages `ChromeServer` process pool, responsible for spawning a browser
-  process for each defined PORT in the port range configured.
+`Chroxy.BrowserPool` - Inits & Controls access to pool of browser processes
 * Exposes `connection/0` function which will return a WebSocket connection to a
   browser tab, from a random browser process in the managed pool.
+
+`Chroxy.BrowerPool.Chrome` - Chrome Process Pool
+* Manages `ChromeServer` process pool, responsible for spawning a browser
+  process for each defined PORT in the port range configured.
 
 ### HTTP API - `Chroxy.Endpoint`
 
