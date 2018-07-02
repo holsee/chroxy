@@ -127,8 +127,7 @@ defmodule Chroxy.BrowserPool.Chrome do
     case Chroxy.ChromeServer.ready(chrome) do
       :ready ->
         # when ready close the pages which are openned by default
-        # :ok = Chroxy.ChromeServer.close_all_pages(chrome)
-        :ok
+        :ok = Chroxy.ChromeServer.close_all_pages(chrome)
 
       :timeout ->
         # failed to become ready in an acceptable timeframe
@@ -150,7 +149,6 @@ defmodule Chroxy.BrowserPool.Chrome do
     {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
     url = Chroxy.ChromeProxy.chrome_connection(pid)
     page_id = page_id({:url, url})
-    IO.inspect(page_id_url: page_id)
     Chroxy.ProxyRouter.put(page_id, pid)
     {:reply, url, state}
   end

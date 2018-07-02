@@ -46,19 +46,20 @@ defmodule Chroxy.ChromeProxy do
   routed via the underlying proxy.
   """
   def chrome_connection(ref) do
-    proxy_ws = GenServer.call(ref, :chrome_connection)
-    # TODO we may wish to timebomb if `up/2` is not called i.e. client
-    # connection not established.  We would also want to place a timeout on the
-    # accept.
-    proxy_ws
-  end
-
-  def downstream_options(ref) do
-    GenServer.call(ref, :downstream_options)
+    GenServer.call(ref, :chrome_connection)
   end
 
   ##
   # Proxy Hook Callbacks
+
+  @doc """
+  `Chroxy.ProxyServer` Callback Hook
+  Called when upstream connection is established to ProxyServer.
+  Will return downstream connection information of the Chrome instance.
+  """
+  def up(ref, proxy_state) do
+    GenServer.call(ref, {:up, proxy_state})
+  end
 
   @doc """
   `Chroxy.ProxyServer` Callback Hook
@@ -115,7 +116,6 @@ defmodule Chroxy.ChromeProxy do
       %{state |
         page: page,
         proxy_opts: [
-          hook: %{mod: __MODULE__, ref: self()},
           downstream_host: uri.host |> String.to_charlist(),
           downstream_port: uri.port
         ]
@@ -123,13 +123,15 @@ defmodule Chroxy.ChromeProxy do
     }
   end
 
-  def handle_call(:downstream_options, _from, state = %{proxy_opts: proxy_opts}) do
-    {:reply, proxy_opts, state}
-  end
-
+  @doc false
   def handle_call(:chrome_connection, _from, state = %{page: page}) do
     proxy_websocket = proxy_websocket_addr(page)
     {:reply, proxy_websocket, state}
+  end
+
+  @doc false
+  def handle_call({:up, _proxy_state}, _from, state = %{proxy_opts: proxy_opts}) do
+    {:reply, proxy_opts, state}
   end
 
   @doc false
