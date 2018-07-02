@@ -112,7 +112,7 @@ Example: Create a Page Session, Registering for Event and Navigating to URL
 
 ``` elixir
 ws_addr = Chroxy.connection()
-{:ok, page} = ChromeRemoteInterface.PageSession.start_link(ws_url)
+{:ok, page} = ChromeRemoteInterface.PageSession.start_link(ws_addr)
 ChromeRemoteInterface.RPC.Page.enable(page)
 ChromeRemoteInterface.PageSession.subscribe(page, "Page.loadEventFired", self())
 url = "https://github.com/holsee"
