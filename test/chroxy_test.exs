@@ -8,15 +8,17 @@ defmodule ChroxyTest do
     IO.puts("Browsers Ready")
     :ok
   end
+
   def ready_up(false) do
     Process.sleep(1000)
     ready_up(:_)
   end
+
   def ready_up(_) do
     {from, _} = Application.get_env(:chroxy, :chrome_remote_debug_port_from) |> Integer.parse()
     {to, _} = Application.get_env(:chroxy, :chrome_remote_debug_port_to) |> Integer.parse()
     pool_size = Chroxy.BrowserPool.Chrome.pool() |> Enum.count()
-		port_count = to - from + 1
+    port_count = to - from + 1
     ready? = Kernel.==(pool_size, port_count)
     ready_up(ready?)
   end
@@ -54,5 +56,4 @@ defmodule ChroxyTest do
     # Should not have crashed
     assert true
   end
-
 end

@@ -64,7 +64,6 @@ defmodule Chroxy.BrowserPool do
     Logger.info("BrowserPool link #{inspect(pid)} exited: #{inspect(reason)}")
     {:noreply, state}
   end
-
 end
 
 defmodule Chroxy.BrowserPool.Chrome do
@@ -157,12 +156,13 @@ defmodule Chroxy.BrowserPool.Chrome do
   def pool() do
     Chroxy.ChromeServer.Supervisor.which_children()
     |> Enum.filter(fn
-         ({_, p, :worker, _}) when is_pid(p) ->
-           Chroxy.ChromeServer.ready(p) == :ready
-         (_) -> false
-       end)
+      {_, p, :worker, _} when is_pid(p) ->
+        Chroxy.ChromeServer.ready(p) == :ready
+
+      _ ->
+        false
+    end)
     |> Enum.map(&elem(&1, 1))
     |> Enum.sort()
   end
-
 end
