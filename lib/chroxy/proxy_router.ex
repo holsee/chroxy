@@ -8,6 +8,8 @@ defmodule Chroxy.ProxyRouter do
 
   use GenServer
 
+  require Logger
+
   @tbl __MODULE__
 
   def child_spec() do
@@ -42,13 +44,32 @@ defmodule Chroxy.ProxyRouter do
     end
   end
 
+  def delete(key) do
+    GenServer.cast(__MODULE__, {:delete, key})
+  end
+
   def handle_cast({:put, key, proc}, state) do
+    Logger.debug(fn -> "put object with key: #{key} - value: #{inspect(proc)}" end)
     ref = Process.monitor(proc)
     :ets.insert(@tbl, {key, proc, ref})
     {:noreply, state}
   end
 
+  def handle_cast({:delete, key}, state) do
+    Logger.debug(fn -> "deleting object with key: #{key}" end)
+    case :ets.lookup(@tbl, key) do
+      [] ->
+        :not_found
+      [{_key, _pid, ref}|_] ->
+        :ets.delete(@tbl, key)
+        Process.demonitor(ref)
+    end
+
+    {:noreply, state}
+  end
+
   def handle_info({:DOWN, ref, :process, _object, _reason}, state) do
+    Logger.debug(fn -> "received DOWN message for: #{inspect(ref)}" end)
     # Delete all the registrations for process which has went down, as the
     # lookups would no longer be valid after process dies.
     @tbl

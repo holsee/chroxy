@@ -64,7 +64,6 @@ defmodule Chroxy.BrowserPool do
     Logger.info("BrowserPool link #{inspect(pid)} exited: #{inspect(reason)}")
     {:noreply, state}
   end
-
 end
 
 defmodule Chroxy.BrowserPool.Chrome do
@@ -148,23 +147,7 @@ defmodule Chroxy.BrowserPool.Chrome do
   def handle_call({:get_connection, chrome}, _from, state) do
     {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
     url = Chroxy.ChromeProxy.chrome_connection(pid)
-    page_id = page_id({:url, url})
-    Chroxy.ProxyRouter.put(page_id, pid)
     {:reply, url, state}
-  end
-
-  def page_id({:url, url}) do
-    url
-    |> String.split("/")
-    |> List.last()
-  end
-
-  def page_id({:http_request, data}) do
-    data
-    |> String.split(" HTTP")
-    |> List.first()
-    |> String.split("GET /devtools/page/")
-    |> Enum.at(1)
   end
 
   @doc """
@@ -173,12 +156,13 @@ defmodule Chroxy.BrowserPool.Chrome do
   def pool() do
     Chroxy.ChromeServer.Supervisor.which_children()
     |> Enum.filter(fn
-         ({_, p, :worker, _}) when is_pid(p) ->
-           Chroxy.ChromeServer.ready(p) == :ready
-         (_) -> false
-       end)
+      {_, p, :worker, _} when is_pid(p) ->
+        Chroxy.ChromeServer.ready(p) == :ready
+
+      _ ->
+        false
+    end)
     |> Enum.map(&elem(&1, 1))
     |> Enum.sort()
   end
-
 end
