@@ -70,6 +70,26 @@ defmodule Chroxy.ChromeProxy do
     GenServer.cast(ref, {:down, proxy_state})
   end
 
+  @doc """
+  Extract Chrome `page_id` from url.
+  """
+  def page_id({:url, url}) do
+    url
+    |> String.split("/")
+    |> List.last()
+  end
+
+  @doc """
+  Extract Chrome `page_id` from http request.
+  """
+  def page_id({:http_request, data}) do
+    data
+    |> String.split(" HTTP")
+    |> List.first()
+    |> String.split("GET /devtools/page/")
+    |> Enum.at(1)
+  end
+
   ##
   # GenServer Callbacks
 
@@ -93,6 +113,9 @@ defmodule Chroxy.ChromeProxy do
     # Create a new page
     page = new_page(chrome)
 
+    # Register page into `ProxyRouter` for dynamic lookup
+    Chroxy.ProxyRouter.put(page["id"], self())
+
     # Get the websocket host:port for the page and pass to the proxy listener
     # directly in order to set the downstream connection proxy process when
     # a upstream client connects. (Note: no need to use `up/2` callback as we
@@ -106,7 +129,7 @@ defmodule Chroxy.ChromeProxy do
     Chroxy.ProxyListener.accept(dyn_hook: fn(req) ->
       %{
         mod: Chroxy.ChromeProxy,
-        ref: Chroxy.BrowserPool.Chrome.page_id({:http_request, req})
+        ref: page_id({:http_request, req})
              |> Chroxy.ProxyRouter.get()
       }
     end)
@@ -125,8 +148,8 @@ defmodule Chroxy.ChromeProxy do
 
   @doc false
   def handle_call(:chrome_connection, _from, state = %{page: page}) do
-    proxy_websocket = proxy_websocket_addr(page)
-    {:reply, proxy_websocket, state}
+    proxy_websocket_url = proxy_websocket_addr(page)
+    {:reply, proxy_websocket_url, state}
   end
 
   @doc false
@@ -139,7 +162,10 @@ defmodule Chroxy.ChromeProxy do
     Logger.info("Proxy connection down - closing page")
     # Close the page when connection is down, unless chrome process has died
     # which is a reason for which the connection could be down
-    if Process.alive?(chrome), do: Chroxy.ChromeServer.close_page(chrome, page)
+    if Process.alive?(chrome) do
+      Chroxy.ChromeServer.close_page(chrome, page)
+      Chroxy.ProxyRouter.delete(page["id"])
+    end
     # terminate this process, as underlying proxy connections have been closed
     {:stop, :normal, state}
   end

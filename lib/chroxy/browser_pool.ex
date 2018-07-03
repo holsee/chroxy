@@ -148,23 +148,7 @@ defmodule Chroxy.BrowserPool.Chrome do
   def handle_call({:get_connection, chrome}, _from, state) do
     {:ok, pid} = Chroxy.ChromeProxy.start_link(chrome: chrome)
     url = Chroxy.ChromeProxy.chrome_connection(pid)
-    page_id = page_id({:url, url})
-    Chroxy.ProxyRouter.put(page_id, pid)
     {:reply, url, state}
-  end
-
-  def page_id({:url, url}) do
-    url
-    |> String.split("/")
-    |> List.last()
-  end
-
-  def page_id({:http_request, data}) do
-    data
-    |> String.split(" HTTP")
-    |> List.first()
-    |> String.split("GET /devtools/page/")
-    |> Enum.at(1)
   end
 
   @doc """
