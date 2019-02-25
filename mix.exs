@@ -26,10 +26,11 @@ defmodule Chroxy.MixProject do
   defp deps do
     [
       {:plug, "~> 1.5"},
+      {:plug_cowboy, "~> 1.0"},
       {:cowboy, "~> 1.1"},
       {:jason, "~> 1.0"},
-      {:erlexec, "~> 1.1.3"},
-      {:exexec, "~> 0.0.1"},
+      {:erlexec, "~> 1.9.5"},
+      {:exexec, "~> 0.1"},
       {:chrome_remote_interface, "~> 0.1.0"},
       {:ex_doc, "~> 0.16", only: :dev, runtime: false}
     ]
