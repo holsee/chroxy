@@ -77,7 +77,7 @@ Task.async_stream(clients, fn(client) ->
 end, timeout: :infinity) |> Stream.run
 ```
 
-You can then use any `Page` related functionality from with
+You can then use any `Page` related functionality using
 `ChromeRemoteInterface`.
 
 ### Use any client that speaks Chrome Debug Protocol:
