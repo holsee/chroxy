@@ -57,6 +57,11 @@ _Run with an attached session:_
 ```
 $ iex -S mix
 ```
+_Run Docker image_
+```
+$ docker build . -t chroxy
+$ docker run -p 1330:1330 -p 1331:1331 chroxy
+```
 
 ## Operation Examples:
 
@@ -90,6 +95,18 @@ ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 ```
 With this address you can establish the connection to the chrome instance (which
 is routed via a transparent proxy).
+
+## Running in Docker
+
+See: Configuration Section below for more information on Chroxy Specific configuration options
+
+### Locally
+
+Exposes 1330, and 1331 (default ports for connection api and chrome proxy endpoint).
+
+```
+docker-compose up
+```
 
 ## Configuration
 
@@ -209,3 +226,94 @@ Response:
 ```
 ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 ```
+
+## Kubernetes
+
+The following is an example configuration which can be used to run Chroxy on
+Kubernetes.
+
+deployment.yaml
+```yaml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: crawler
+  namespace: default
+  labels:
+    app: myApp
+    tier: crawler
+
+spec:
+  replicas: 1
+  revisionHistoryLimit: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: myApp
+      tier: crawler
+  template:
+    metadata:
+      labels:
+        app: myApp
+        tier: crawler
+    spec:
+      containers:
+        - image: eu.gcr.io/..../...:latest # your consumer
+          name: api
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 30m
+              memory: 100Mi
+          ports:
+            - containerPort: 4000
+          env:
+          - name: USER_AGENT
+            value: ...
+          - name: INSTANCE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+
+        # [START chroxy]
+        - name: headless-chrome
+          image: eu.gcr.io/..../chroxy:latest # chroxy
+          imagePullPolicy: Always
+          resources:
+            requests:
+              cpu: 30m
+              memory: 100Mi
+          env:
+            - name: CHROXY_CHROME_PORT_FROM
+              value: "9222"
+            - name: CHROXY_CHROME_PORT_TO
+              value: "9223"
+          ports:
+            - containerPort: 1331
+            - containerPort: 1330
+        # [END chroxy]
+```
+
+service.yaml
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: crawler-api
+  labels:
+    app: myApp
+    tier: crawler
+spec:
+  selector:
+    app: myApp
+    tier: crawler
+  ports:
+  - port: 4000
+    protocol: TCP
+```
+
