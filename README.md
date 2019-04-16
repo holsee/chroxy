@@ -227,10 +227,13 @@ Response:
 ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 ```
 
-## Kubernetes Example
+## Kubernetes
+
+The following is an example configuration which can be used to run Chroxy on
+Kubernetes.
 
 deployment.yaml
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
