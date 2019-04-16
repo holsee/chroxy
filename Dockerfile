@@ -35,8 +35,6 @@ RUN groupadd --system chrome && \
 # Run everything after as non-privileged user.
 USER chrome
 
-ARG ERLANG_COOKIE
-ENV ERLANG_COOKIE $ERLANG_COOKIE
 ENV MIX_ENV=prod
 
 # Install Hex + Rebar
