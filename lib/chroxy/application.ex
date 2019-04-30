@@ -21,7 +21,9 @@ defmodule Chroxy.Application do
       Chroxy.ProxyRouter.child_spec()
     ]
 
-    Logger.info("Started application")
+    elixir_version = System.version()
+    otp_release = :erlang.system_info(:otp_release)
+    Logger.info("Started application: Elixir `#{elixir_version}` on OTP `#{otp_release}`.")
 
     opts = [strategy: :one_for_one, name: Chroxy.Supervisor]
     Supervisor.start_link(children, opts)
