@@ -24,6 +24,15 @@ protocol](https://chromedevtools.github.io/devtools-protocol/).
 * Uses Chrome Remote Debugging Protocol for optimal client compatibility.
 * Transparent Dynamic Proxy provides automatic resource cleanup.
 
+## Cowboy Compatibility
+
+Cowboy is a major dependency of Phoenix, as such here is a little notice as to
+which versions of cowboy are hard dependencies of Chroxy. This notice will be
+removed at version 1.0 of Chroxy.
+
+`Cowboy 1.x` <= version 0.5.1
+`Cowboy 2.x` > version 0.6.0
+
 ## Project Goals
 
 The objective of this project is to enable connections to headless chrome
