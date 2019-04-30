@@ -29,8 +29,8 @@ defmodule Chroxy.MixProject do
       {:plug_cowboy, "~> 1.0"},
       {:cowboy, "~> 1.1"},
       {:jason, "~> 1.1"},
-      {:erlexec, "~> 1.9.5"},
-      {:exexec, "~> 0.1"},
+      {:erlexec, "~> 1.10.0"},
+      {:exexec, "~> 0.2"},
       {:chrome_remote_interface, "~> 0.2.0"},
       {:ex_doc, "~> 0.20", only: :dev, runtime: false}
     ]
