@@ -25,14 +25,14 @@ defmodule Chroxy.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, "~> 1.5"},
-      {:plug_cowboy, "~> 1.0"},
-      {:cowboy, "~> 1.1"},
-      {:jason, "~> 1.0"},
-      {:erlexec, "~> 1.9.5"},
-      {:exexec, "~> 0.1"},
-      {:chrome_remote_interface, "~> 0.1.0"},
-      {:ex_doc, "~> 0.16", only: :dev, runtime: false}
+      {:plug, "~> 1.8.0"},
+      {:plug_cowboy, "~> 2.0.2"},
+      {:cowboy, "~> 2.6.3"},
+      {:jason, "~> 1.1"},
+      {:erlexec, "~> 1.10.0"},
+      {:exexec, "~> 0.2"},
+      {:chrome_remote_interface, "~> 0.2.0"},
+      {:ex_doc, "~> 0.20", only: :dev, runtime: false}
     ]
   end
 
