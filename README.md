@@ -66,7 +66,10 @@ _Run with an attached session:_
 ```
 $ iex -S mix
 ```
+
 _Run Docker image_
+
+Exposes 1330, and 1331 (default ports for connection api and chrome proxy endpoint).
 ```
 $ docker build . -t chroxy
 $ docker run -p 1330:1330 -p 1331:1331 chroxy
@@ -104,18 +107,6 @@ ws://localhost:1331/devtools/page/2CD7F0BC05863AB665D1FB95149665AF
 ```
 With this address you can establish the connection to the chrome instance (which
 is routed via a transparent proxy).
-
-## Running in Docker
-
-See: Configuration Section below for more information on Chroxy Specific configuration options
-
-### Locally
-
-Exposes 1330, and 1331 (default ports for connection api and chrome proxy endpoint).
-
-```
-docker-compose up
-```
 
 ## Configuration
 
