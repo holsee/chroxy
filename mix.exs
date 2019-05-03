@@ -4,7 +4,7 @@ defmodule Chroxy.MixProject do
   def project do
     [
       app: :chroxy,
-      version: "0.6.0",
+      version: "0.6.1",
       elixir: "~> 1.6",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -31,7 +31,7 @@ defmodule Chroxy.MixProject do
       {:jason, "~> 1.1"},
       {:erlexec, "~> 1.10.0"},
       {:exexec, "~> 0.2"},
-      {:chrome_remote_interface, "~> 0.2.0"},
+      {:chrome_remote_interface, "~> 0.3.0"},
       {:ex_doc, "~> 0.20", only: :dev, runtime: false}
     ]
   end
