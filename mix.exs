@@ -31,7 +31,7 @@ defmodule Chroxy.MixProject do
       {:jason, "~> 1.1"},
       {:erlexec, "~> 1.10.0"},
       {:exexec, "~> 0.2"},
-      {:chrome_remote_interface, "~> 0.2.0"},
+      {:chrome_remote_interface, "~> 0.3.0"},
       {:ex_doc, "~> 0.20", only: :dev, runtime: false}
     ]
   end
