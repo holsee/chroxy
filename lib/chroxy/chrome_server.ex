@@ -123,7 +123,7 @@ defmodule Chroxy.ChromeServer do
 
   @doc false
   def terminate(reason, state) do
-    Logger.warn("ChromeServer terminating - #{inspect(state)} - reason: #{reason}")
+    Logger.warn("ChromeServer terminating - #{inspect(state)} - reason: #{inspect(reason)}")
     :ok
   end
 
