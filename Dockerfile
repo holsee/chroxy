@@ -1,5 +1,5 @@
 ########################################################################
-FROM elixir:1.8.2-slim
+FROM elixir:1.9.4-slim
 
 ENV SHELL=/bin/sh
 ENV application_directory=/usr/src/app

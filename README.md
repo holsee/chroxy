@@ -74,8 +74,8 @@ docker in order to function in a stable manner.
 
 Exposes 1330, and 1331 (default ports for connection api and chrome proxy endpoint).
 ```
-$ docker build . -t chroxy
-$ docker run --shm-size 2G -p 1330:1330 -p 1331:1331 chroxy
+docker build . -t chroxy
+docker run --shm-size 2G -p 1330:1330 -p 1331:1331 chroxy
 ```
 
 ## Operation Examples:
