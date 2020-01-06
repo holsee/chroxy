@@ -1,9 +1,15 @@
 language: elixir
+
 elixir:
-  - 1.6
+  - 1.7
   - 1.8
   - 1.9
 otp_release:
+  - 22.2
   - 21.3
   - 20.3
 
+jobs:
+  exclude:
+    - elixir: 1.9
+      otp_release: 20.3
