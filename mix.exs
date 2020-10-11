@@ -25,9 +25,9 @@ defmodule Chroxy.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:plug, "~> 1.8.0"},
-      {:plug_cowboy, "~> 2.0.2"},
-      {:cowboy, "~> 2.7.0"},
+      {:plug, "~> 1.10.0"},
+      {:plug_cowboy, "~> 2.4.0"},
+      {:cowboy, "~> 2.8.0"},
       {:jason, "~> 1.1"},
       {:erlexec, "~> 1.10.0"},
       {:exexec, "~> 0.2"},
