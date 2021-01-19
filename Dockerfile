@@ -41,13 +41,13 @@ ENV MIX_ENV=prod
 RUN mix do local.hex --force, local.rebar --force
 
 # Cache & compile elixir deps
-COPY config/ $application_directory/config/
-COPY mix.exs mix.lock $application_directory/
+COPY --chown=chrome config/ $application_directory/config/
+COPY --chown=chrome mix.exs mix.lock $application_directory/
 RUN mix deps.get --only $MIX_ENV
 RUN mix deps.compile
 
 # Get rest of application and compile
-COPY . $application_directory/
+COPY --chown=chrome . $application_directory/
 RUN mix compile --no-deps-check
 
 RUN mix do deps.loadpaths --no-deps-check
