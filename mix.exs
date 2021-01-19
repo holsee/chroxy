@@ -4,7 +4,7 @@ defmodule Chroxy.MixProject do
   def project do
     [
       app: :chroxy,
-      version: "0.6.3",
+      version: "0.7.0",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
