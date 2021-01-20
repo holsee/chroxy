@@ -14,6 +14,13 @@ This project was born out of necessity, as we needed to orchestrate a large
 number of concurrent browser scenario executions, with low-level control and
 advanced introspection capabilities.
 
+## Versions
+
+Elixir: 1.8+
+OTP: 21.3+
+
+See `.travis.yml` for complete list of supported versions.
+
 ## Features
 
 * Direct WebSocket connections to chrome pages, speaking [Chrome Remote Debug
@@ -32,6 +39,7 @@ removed at version 1.0 of Chroxy.
 
 `Cowboy 1.x` <= version 0.5.1
 `Cowboy 2.x` > version 0.6.0
+`Cowboy 2.8+` > version 0.7.0
 
 ## Project Goals
 
